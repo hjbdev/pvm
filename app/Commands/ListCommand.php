@@ -28,7 +28,7 @@ class ListCommand extends Command
      */
     public function handle()
     {
-        $this->info('📜 Available PHP Versions');
+        $this->line('📜 Available PHP Versions');
         $this->line('');
  
         if (Storage::has('versions.json')) {
@@ -38,11 +38,11 @@ class ListCommand extends Command
         }
 
         if(!$versions->first()) {
-            $this->info('❌ No PHP versions found');
+            $this->line('❌ No PHP versions found');
         }
 
         foreach($versions as $version) {
-            $this->info('    ' . "{$version->major_version}.{$version->minor_version}.{$version->patch_version}" . ($version->active ? '✔' : ''));
+            $this->line('    ' . "{$version->major_version}.{$version->minor_version}.{$version->patch_version}" . ($version->active ? '✔' : ''));
         }
     }
 }

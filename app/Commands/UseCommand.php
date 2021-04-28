@@ -46,12 +46,12 @@ class UseCommand extends Command
 
 
         if($versions->count() > 1) {
-            $this->info('You have more than 1 version of PHP ' . $versionStr . ' installed. Please be more specific');
+            $this->line('You have more than 1 version of PHP ' . $versionStr . ' installed. Please be more specific');
             return;
         } else if ($versions->count() === 1) {
             $version = $versions->first();
         } else {
-            $this->info("You do not have {$versionStr}");
+            $this->line("You do not have {$versionStr}");
             return;
         }
 
