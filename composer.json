@@ -5,7 +5,7 @@
     "homepage": "https://pvm.hjb.dev",
     "type": "library",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "support": {
         "issues": "https://github.com/hjbdev/pvm/issues",
         "source": "https://github.com/hjbdev/pvm"
