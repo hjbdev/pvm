@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Console\StorageLinkCommand;
-
 return [
 
     /*
@@ -60,7 +58,6 @@ return [
         Illuminate\Console\Scheduling\ScheduleRunCommand::class,
         Illuminate\Console\Scheduling\ScheduleFinishCommand::class,
         Illuminate\Foundation\Console\VendorPublishCommand::class,
-        // StorageLinkCommand::class,
     ],
 
     /*
