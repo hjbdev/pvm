@@ -19,7 +19,7 @@ class CreateVersionsTable extends Migration
             $table->integer('major_version');
             $table->integer('minor_version');
             $table->integer('patch_version');
-            $table->timestamps();
+            $table->boolean('active');
         });
     }
 

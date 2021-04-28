@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Foundation\Console\StorageLinkCommand;
+
 return [
 
     /*
@@ -55,11 +57,10 @@ return [
     */
 
     'hidden' => [
-        NunoMaduro\LaravelConsoleSummary\SummaryCommand::class,
-        Symfony\Component\Console\Command\HelpCommand::class,
         Illuminate\Console\Scheduling\ScheduleRunCommand::class,
         Illuminate\Console\Scheduling\ScheduleFinishCommand::class,
         Illuminate\Foundation\Console\VendorPublishCommand::class,
+        // StorageLinkCommand::class,
     ],
 
     /*
@@ -74,7 +75,9 @@ return [
     */
 
     'remove' => [
-        // ..
+        NunoMaduro\LaravelConsoleSummary\SummaryCommand::class,
+        Symfony\Component\Console\Command\ListCommand::class,
+        Symfony\Component\Console\Command\HelpCommand::class,
     ],
 
 ];

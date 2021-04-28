@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Commands;
+
+use Illuminate\Support\Facades\Storage;
+use LaravelZero\Framework\Commands\Command;
+
+class ListCommand extends Command
+{
+    /**
+     * The signature of the command.
+     *
+     * @var string
+     */
+    protected $signature = 'list';
+
+    /**
+     * The description of the command.
+     *
+     * @var string
+     */
+    protected $description = 'List all installed versions of PHP';
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
+    {
+        $this->info('📜 Available PHP Versions');
+        $this->line('');
+ 
+        if (Storage::has('versions.json')) {
+            $versions = collect(json_decode(file_get_contents(storage_path('versions.json'))));
+        } else {
+            $versions = collect();
+        }
+
+        if(!$versions->first()) {
+            $this->info('❌ No PHP versions found');
+        }
+
+        foreach($versions as $version) {
+            $this->info('    ' . "{$version->major_version}.{$version->minor_version}.{$version->patch_version}" . ($version->active ? '✔' : ''));
+        }
+    }
+}

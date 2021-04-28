@@ -4,8 +4,8 @@ namespace App\Commands;
 
 use App\Support\ExeInfo;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use LaravelZero\Framework\Commands\Command;
 
 class Discover extends Command
@@ -38,6 +38,12 @@ class Discover extends Command
         $dirs = File::directories($path);
         $discovered = 0;
 
+        if (Storage::has('versions.json')) {
+            $versions = collect(json_decode(file_get_contents(storage_path('versions.json'))));
+        } else {
+            $versions = collect();
+        }
+
         foreach ($dirs as $dir) {
             $exe = $dir . DIRECTORY_SEPARATOR . 'php.exe';
             if(File::exists($exe)) {
@@ -45,14 +51,15 @@ class Discover extends Command
                 $version = $exeInfo['FileVersion'];
                 list($major, $minor, $patch) = explode('.', $exeInfo['FileVersion']);
 
-                $existing = DB::table('versions')->where('path', $dir)->first();
+                $existing = $versions->where('path', $dir)->first();
 
                 if(!$existing) {
-                    DB::table('versions')->insert([
+                    $versions->push([
                         'path' => $dir,
                         'major_version' => $major,
                         'minor_version' => $minor,
-                        'patch_version' => $patch
+                        'patch_version' => $patch,
+                        'active' => 0
                     ]);
 
                     $this->info('    - Discovered PHP ' . $version);
@@ -61,8 +68,10 @@ class Discover extends Command
             }
         }
 
+        Storage::put('versions.json', $versions->toJson());
+
         $this->line('');
-        $this->info('✅ Discovered ' . $discovered . ' versions of PHP');
+        $this->info('✔ Discovered ' . $discovered . ' versions of PHP');
     }
 
     /**
