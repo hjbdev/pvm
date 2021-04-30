@@ -37,7 +37,7 @@ class DiscoverCommand extends Command
         $dirs = Filesystem::directories($path);
         $discovered = 0;
 
-        if (Filesystem::has(storage_path('versions.json'))) {
+        if (Filesystem::has(storage_path() . '/versions.json')) {
             $versions = collect(json_decode(Filesystem::get(storage_path('versions.json'))));
         } else {
             $versions = collect();
@@ -68,7 +68,7 @@ class DiscoverCommand extends Command
             }
         }
 
-        Filesystem::put(storage_path('versions.json'), $versions->toJson());
+        Filesystem::put(storage_path() . '/versions.json', $versions->toJson());
 
         $this->line('');
         $this->info('✔ Discovered ' . $discovered . ' versions of PHP');
