@@ -1,50 +1,41 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Create The Application
-|--------------------------------------------------------------------------
-|
-| The first thing we will do is create a new Laravel application instance
-| which serves as the "glue" for all the components of Laravel, and is
-| the IoC container for the system binding all of the various parts.
-|
-*/
+use App\Commands\ClearCommand;
+use App\Commands\DiscoverCommand;
+use App\Commands\ListCommand;
+use App\Commands\PathCommand;
+use App\Commands\UseCommand;
 
-$app = new LaravelZero\Framework\Application(
-    dirname(__DIR__)
-);
+include 'helpers.php';
 
-/*
-|--------------------------------------------------------------------------
-| Bind Important Interfaces
-|--------------------------------------------------------------------------
-|
-| Next, we need to bind some important interfaces into the container so
-| we will be able to resolve them when needed. The kernels serve the
-| incoming requests to this application from both the web and CLI.
-|
-*/
+// Import all our commands and map them
+// to an assoc array.
 
-$app->singleton(
-    Illuminate\Contracts\Console\Kernel::class,
-    LaravelZero\Framework\Kernel::class
-);
+$commands = [
+    ClearCommand::class,
+    DiscoverCommand::class,
+    ListCommand::class,
+    PathCommand::class,
+    UseCommand::class
+];
 
-$app->singleton(
-    Illuminate\Contracts\Debug\ExceptionHandler::class,
-    Illuminate\Foundation\Exceptions\Handler::class
-);
+$commandMap = [];
 
-/*
-|--------------------------------------------------------------------------
-| Return The Application
-|--------------------------------------------------------------------------
-|
-| This script returns the application instance. The instance is given to
-| the calling script so we can separate the building of the instances
-| from the actual running of the application and sending responses.
-|
-*/
+foreach ($commands as $command) {
+    $command = new $command();
+    $commandMap[$command->signature()] = $command;
+}
 
-return $app;
+// Get arguments from command line input
+
+if ($argc === 1) {
+    // help command
+}
+
+if ($argc > 1) {
+    $argument = $argv[1];
+
+    if(isset($commandMap[$argv[1]])) {
+        $commandMap[$argv[1]]->handle();
+    }
+}

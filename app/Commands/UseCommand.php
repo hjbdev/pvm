@@ -3,7 +3,6 @@
 namespace App\Commands;
 
 use Illuminate\Support\Facades\Storage;
-use LaravelZero\Framework\Commands\Command;
 
 class UseCommand extends Command
 {
@@ -12,7 +11,7 @@ class UseCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'use {version}';
+    protected $signature = 'use';
 
     /**
      * The description of the command.
@@ -28,7 +27,11 @@ class UseCommand extends Command
      */
     public function handle()
     {
-        $versionStr = $this->argument('version');
+        if($argc === 3) {
+            $versionStr = $argv[2];
+        } else {
+            $this->error('Please provide a version.');
+        }
     
         list($major, $minor, $patch) = array_pad(explode('.', $versionStr), 3, null);
 

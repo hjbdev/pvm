@@ -3,7 +3,6 @@
 namespace App\Commands;
 
 use Illuminate\Support\Facades\Storage;
-use LaravelZero\Framework\Commands\Command;
 
 class ListCommand extends Command
 {

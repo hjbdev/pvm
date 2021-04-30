@@ -3,12 +3,10 @@
 namespace App\Commands;
 
 use App\Support\ExeInfo;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use LaravelZero\Framework\Commands\Command;
 
-class Discover extends Command
+class DiscoverCommand extends Command
 {
     /**
      * The signature of the command.
@@ -72,16 +70,5 @@ class Discover extends Command
 
         $this->line('');
         $this->info('✔ Discovered ' . $discovered . ' versions of PHP');
-    }
-
-    /**
-     * Define the command's schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule $schedule
-     * @return void
-     */
-    public function schedule(Schedule $schedule): void
-    {
-        // $schedule->command(static::class)->everyMinute();
     }
 }
