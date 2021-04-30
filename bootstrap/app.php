@@ -1,5 +1,6 @@
 <?php
 
+use App\Application;
 use App\Commands\ClearCommand;
 use App\Commands\DiscoverCommand;
 use App\Commands\ListCommand;
@@ -11,31 +12,25 @@ include 'helpers.php';
 // Import all our commands and map them
 // to an assoc array.
 
-$commands = [
-    ClearCommand::class,
-    DiscoverCommand::class,
-    ListCommand::class,
-    PathCommand::class,
-    UseCommand::class
-];
+$app = app();
 
-$commandMap = [];
+$app->handle();
 
-foreach ($commands as $command) {
-    $command = new $command();
-    $commandMap[$command->signature()] = $command;
-}
+// $commands = [
+//     ClearCommand::class,
+//     DiscoverCommand::class,
+//     ListCommand::class,
+//     PathCommand::class,
+//     UseCommand::class
+// ];
 
-// Get arguments from command line input
 
-if ($argc === 1) {
-    // help command
-}
+// $commandMap = [];
 
-if ($argc > 1) {
-    $argument = $argv[1];
+// foreach ($commands as $command) {
+//     $command = new $command();
+//     $commandMap[$command->signature()] = $command;
+// }
 
-    if(isset($commandMap[$argv[1]])) {
-        $commandMap[$argv[1]]->handle();
-    }
-}
+
+

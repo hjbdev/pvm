@@ -2,7 +2,7 @@
 
 namespace App\Commands;
 
-use Illuminate\Support\Facades\Storage;
+use App\Support\Filesystem;
 
 class UseCommand extends Command
 {
@@ -27,17 +27,20 @@ class UseCommand extends Command
      */
     public function handle()
     {
-        if($argc === 3) {
-            $versionStr = $argv[2];
+        $versionStr = null;
+
+        if(app()->argument(1)) {
+            $versionStr = app()->argument(1);
         } else {
             $this->error('Please provide a version.');
+            exit(1);
         }
     
         list($major, $minor, $patch) = array_pad(explode('.', $versionStr), 3, null);
 
         $version = null;
 
-        if (Storage::has('versions.json')) {
+        if (Filesystem::has(storage_path('versions.json'))) {
             $versions = collect(json_decode(file_get_contents(storage_path('versions.json'))));
         } else {
             $versions = collect();
@@ -49,25 +52,23 @@ class UseCommand extends Command
 
 
         if($versions->count() > 1) {
-            $this->line('You have more than 1 version of PHP ' . $versionStr . ' installed. Please be more specific');
-            return;
+            $this->error('You have more than 1 version of PHP ' . $versionStr . ' installed. Please be more specific');
+            exit(1);
         } else if ($versions->count() === 1) {
             $version = $versions->first();
         } else {
-            $this->line("You do not have {$versionStr}");
-            return;
+            $this->error("You do not have {$versionStr}");
+            exit(1);
         }
 
-        $filesystem = $this->laravel->make('files');
-
-        if($filesystem->exists(base_path('bin'))) {
-            rmdir(base_path('bin'));
+        if(Filesystem::has(base_path('bin'))) {
+            rmlink(base_path() . DIRECTORY_SEPARATOR . 'bin');
         }
 
         // get the full versions list back out
 
-        if (Storage::has('versions.json')) {
-            $versions = collect(json_decode(file_get_contents(storage_path('versions.json'))));
+        if (Filesystem::has(storage_path('versions.json'))) {
+            $versions = collect(json_decode(Filesystem::get(storage_path('versions.json'))));
         } else {
             $versions = collect();
         }
@@ -81,9 +82,9 @@ class UseCommand extends Command
             return $item;
         });
 
-        Storage::put('versions.json', $versions->toJson());
+        Filesystem::put('versions.json', $versions->toJson());
 
-        $filesystem->link($version->path, base_path('bin'));
+        Filesystem::link($version->path, base_path() . DIRECTORY_SEPARATOR . 'bin');
 
         $this->info('✔ Switched PHP version to ' . $versionStr);
     }

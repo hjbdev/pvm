@@ -2,6 +2,7 @@
 
 namespace App\Commands;
 
+use Codedungeon\PHPCliColors\Color;
 
 class Command {
 
@@ -10,7 +11,7 @@ class Command {
 
     public function info($message)
     {
-        echo $message . PHP_EOL;
+        echo $this->line(Color::GREEN . $message);
     }
 
     public function line($message)
