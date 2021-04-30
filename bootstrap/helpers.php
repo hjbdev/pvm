@@ -5,7 +5,7 @@ use App\Support\Collection;
 
 function base_path($path = '')
 {
-    return realpath(getcwd() . DIRECTORY_SEPARATOR . $path);
+    return realpath(__DIR__ . DIRECTORY_SEPARATOR . '..'  . DIRECTORY_SEPARATOR . $path);
 }
 
 function public_path($path = '')
@@ -80,8 +80,9 @@ function windows_os()
     return strtolower(substr(PHP_OS, 0, 3)) === 'win';
 }
 
-function rmlink($path) {
-    if(windows_os()) {
+function rmlink($path)
+{
+    if (windows_os()) {
         exec("cmd /c rmdir " . escapeshellarg($path));
     } else {
         unlink($path);
