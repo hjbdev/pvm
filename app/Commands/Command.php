@@ -11,7 +11,7 @@ class Command {
 
     public function info($message)
     {
-        echo $this->line(Color::GREEN . $message);
+        echo $this->line(Color::GREEN . $message . Color::RESET);
     }
 
     public function line($message)
@@ -22,6 +22,11 @@ class Command {
     public function signature()
     {
         return $this->signature;
+    }
+
+    public function description()
+    {
+        return $this->description;
     }
 
     public function handle()

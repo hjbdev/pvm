@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Commands\HelpCommand;
 use App\Traits\Singleton;
 
 class Application {
@@ -18,30 +19,15 @@ class Application {
 
         $this->discoverCommands();
         $this->parseArguments();
-
-        
-        
-
-        // foreach ($commands as $command) {
-        //     $command = new $command();
-
-        //     echo $command->signature() . PHP_EOL;
-
-        //     if($arguments[$command->signature()]) {
-        //         $command->handle();
-        //     }
-        // }
     }
 
     public function handle()
     {
         if ($this->arguments->count() === 0) {
-            // help command
+            (new HelpCommand)->handle();
         }
 
         if ($this->arguments->count() > 0) {
-            $argument = $this->arguments->first();
-
             if(isset($this->commands[$this->arguments->first()])) {
                 $this->commands[$this->arguments->first()]->handle();
             }
@@ -65,6 +51,11 @@ class Application {
     public function argument($key)
     {
         return $this->arguments->get($key);
+    }
+
+    public function commands()
+    {
+        return $this->commands;
     }
 
     protected function discoverCommands()
