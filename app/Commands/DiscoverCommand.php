@@ -3,19 +3,18 @@
 namespace App\Commands;
 
 use App\Support\ExeInfo;
-use Illuminate\Console\Scheduling\Schedule;
+use App\Support\Filesystem;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use LaravelZero\Framework\Commands\Command;
 
-class Discover extends Command
+class DiscoverCommand extends Command
 {
     /**
      * The signature of the command.
      *
      * @var string
      */
-    protected $signature = 'discover {path?}';
+    protected $signature = 'discover';
 
     /**
      * The description of the command.
@@ -34,22 +33,23 @@ class Discover extends Command
         $this->info('🔎 Discovering PHP Versions...');
         $this->line('');
         
-        $path = $this->argument('path') ?? 'C:\laragon\bin\php';
-        $dirs = File::directories($path);
+        $path = app()->argument(1) ?: 'C:\laragon\bin\php';
+        $dirs = Filesystem::directories($path);
         $discovered = 0;
 
-        if (Storage::has('versions.json')) {
-            $versions = collect(json_decode(file_get_contents(storage_path('versions.json'))));
+        if (Filesystem::has(storage_path('versions.json'))) {
+            $versions = collect(json_decode(Filesystem::get(storage_path('versions.json'))));
         } else {
             $versions = collect();
         }
 
         foreach ($dirs as $dir) {
             $exe = $dir . DIRECTORY_SEPARATOR . 'php.exe';
-            if(File::exists($exe)) {
-                $exeInfo = ExeInfo::get($exe);
-                $version = $exeInfo['FileVersion'];
-                list($major, $minor, $patch) = explode('.', $exeInfo['FileVersion']);
+            if(file_exists($exe)) {
+                $version = ExeInfo::getFileVersion($exe);
+
+                // $version = $exeInfo['FileVersion'];
+                list($major, $minor, $patch) = explode('.', $version);
 
                 $existing = $versions->where('path', $dir)->first();
 
@@ -59,29 +59,18 @@ class Discover extends Command
                         'major_version' => $major,
                         'minor_version' => $minor,
                         'patch_version' => $patch,
-                        'active' => 0
+                        'active' => false
                     ]);
 
-                    $this->info('    - Discovered PHP ' . $version);
+                    $this->line('    - Discovered PHP ' . $version);
                     $discovered++;
                 }
             }
         }
 
-        Storage::put('versions.json', $versions->toJson());
+        Filesystem::put('storage/versions.json', $versions->toJson());
 
         $this->line('');
         $this->info('✔ Discovered ' . $discovered . ' versions of PHP');
-    }
-
-    /**
-     * Define the command's schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule $schedule
-     * @return void
-     */
-    public function schedule(Schedule $schedule): void
-    {
-        // $schedule->command(static::class)->everyMinute();
     }
 }

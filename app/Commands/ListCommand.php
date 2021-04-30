@@ -2,8 +2,7 @@
 
 namespace App\Commands;
 
-use Illuminate\Support\Facades\Storage;
-use LaravelZero\Framework\Commands\Command;
+use App\Support\Filesystem;
 
 class ListCommand extends Command
 {
@@ -31,8 +30,8 @@ class ListCommand extends Command
         $this->line('📜 Available PHP Versions');
         $this->line('');
  
-        if (Storage::has('versions.json')) {
-            $versions = collect(json_decode(file_get_contents(storage_path('versions.json'))));
+        if (Filesystem::has(storage_path('versions.json'))) {
+            $versions = collect(json_decode(Filesystem::get(storage_path('versions.json'))));
         } else {
             $versions = collect();
         }

@@ -2,9 +2,7 @@
 
 namespace App\Commands;
 
-use Illuminate\Console\Scheduling\Schedule;
-use LaravelZero\Framework\Commands\Command;
-use Illuminate\Support\Facades\Storage;
+use App\Support\Filesystem;
 
 class ClearCommand extends Command
 {
@@ -29,7 +27,7 @@ class ClearCommand extends Command
      */
     public function handle()
     {
-        Storage::delete('versions.json');
+        Filesystem::delete(storage_path('versions.json'));
 
         $this->info('🚮 Cleared all saved PHP versions.');
     }
