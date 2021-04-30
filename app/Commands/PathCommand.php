@@ -30,6 +30,6 @@ class PathCommand extends Command
         $this->line('🛠 Add this to your Path variable:');
         $this->line('');
 
-        $this->info(base_path('bin'));
+        $this->info(base_path() . DIRECTORY_SEPARATOR . 'bin');
     }
 }

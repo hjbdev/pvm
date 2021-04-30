@@ -62,7 +62,7 @@ class DiscoverCommand extends Command
                         'active' => false
                     ]);
 
-                    $this->info('    - Discovered PHP ' . $version);
+                    $this->line('    - Discovered PHP ' . $version);
                     $discovered++;
                 }
             }
