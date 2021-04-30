@@ -82,10 +82,10 @@ class UseCommand extends Command
             return $item;
         });
 
-        Filesystem::put('versions.json', $versions->toJson());
+        Filesystem::put(storage_path('versions.json'), $versions->toJson());
 
         Filesystem::link($version->path, base_path() . DIRECTORY_SEPARATOR . 'bin');
 
-        $this->info('✔ Switched PHP version to ' . $versionStr);
+        $this->info('✔ Switched PHP version to ' . $version->major_version . '.' . $version->minor_version . '.' . $version->patch_version);
     }
 }

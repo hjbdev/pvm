@@ -2,27 +2,27 @@
 
 namespace App\Support;
 
-class ExeInfo {
-    public static function get ($filename,$encoding='UTF-8'){
-        $dat = file_get_contents($filename);
-        if($pos=strpos($dat,mb_convert_encoding('VS_VERSION_INFO','UTF-16LE'))){
-            $pos-= 6;
-            $six = unpack('v*',substr($dat,$pos,6));
-            $dat = substr($dat,$pos,$six[1]);
-            if($pos=strpos($dat,mb_convert_encoding('StringFileInfo','UTF-16LE'))){
-                $pos+= 54;
-                $res = [];
-                $six = unpack('v*',substr($dat,$pos,6));
-                while($six[2]){
-                    $nul = strpos($dat,"\0\0\0",$pos+6)+1;
-                    $key = mb_convert_encoding(substr($dat,$pos+6,$nul-$pos-6),$encoding,'UTF-16LE');
-                    $val = mb_convert_encoding(substr($dat,ceil(($nul+2)/4)*4,$six[2]*2-2),$encoding,'UTF-16LE');
-                    $res[$key] = $val;
-                    $pos+= ceil($six[1]/4)*4;
-                    $six = unpack('v*',substr($dat,$pos,6));
-                }
-                return $res;
-            }
+class ExeInfo
+{
+    public static function getFileVersion($fileName)
+    {
+        $key = "P\x00r\x00o\x00d\x00u\x00c\x00t\x00V\x00e\x00r\x00s\x00i\x00o\x00n\x00\x00\x00";
+        $fptr = fopen($fileName, "rb");
+        $data = "";
+        while (!feof($fptr))
+        {
+           $data .= fread($fptr, 65536);
+           if (strpos($data, $key)!==FALSE)
+              break;
+           $data = substr($data, strlen($data)-strlen($key));
         }
+        fclose($fptr);
+        if (strpos($data, $key)===FALSE)
+           return "";
+        $pos = strpos($data, $key)+strlen($key);
+        $version = "";
+        for ($i=$pos; $data[$i]!="\x00"; $i+=2)
+           $version .= $data[$i];
+        return $version;
     }
 }

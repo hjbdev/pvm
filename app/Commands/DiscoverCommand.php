@@ -33,7 +33,7 @@ class DiscoverCommand extends Command
         $this->info('🔎 Discovering PHP Versions...');
         $this->line('');
         
-        $path = app()->argument('path') ?? 'C:\laragon\bin\php';
+        $path = app()->argument(1) ?: 'C:\laragon\bin\php';
         $dirs = Filesystem::directories($path);
         $discovered = 0;
 
@@ -46,9 +46,10 @@ class DiscoverCommand extends Command
         foreach ($dirs as $dir) {
             $exe = $dir . DIRECTORY_SEPARATOR . 'php.exe';
             if(file_exists($exe)) {
-                $exeInfo = ExeInfo::get($exe);
-                $version = $exeInfo['FileVersion'];
-                list($major, $minor, $patch) = explode('.', $exeInfo['FileVersion']);
+                $version = ExeInfo::getFileVersion($exe);
+
+                // $version = $exeInfo['FileVersion'];
+                list($major, $minor, $patch) = explode('.', $version);
 
                 $existing = $versions->where('path', $dir)->first();
 
@@ -58,7 +59,7 @@ class DiscoverCommand extends Command
                         'major_version' => $major,
                         'minor_version' => $minor,
                         'patch_version' => $patch,
-                        'active' => 0
+                        'active' => false
                     ]);
 
                     $this->info('    - Discovered PHP ' . $version);
