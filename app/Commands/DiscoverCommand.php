@@ -68,7 +68,7 @@ class DiscoverCommand extends Command
             }
         }
 
-        Filesystem::put('storage/versions.json', $versions->toJson());
+        Filesystem::put(storage_path('versions.json'), $versions->toJson());
 
         $this->line('');
         $this->info('✔ Discovered ' . $discovered . ' versions of PHP');
