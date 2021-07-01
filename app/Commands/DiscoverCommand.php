@@ -4,8 +4,6 @@ namespace App\Commands;
 
 use App\Support\ExeInfo;
 use App\Support\Filesystem;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 class DiscoverCommand extends Command
 {
