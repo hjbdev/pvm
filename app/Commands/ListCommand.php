@@ -27,7 +27,7 @@ class ListCommand extends Command
      */
     public function handle()
     {
-        $this->line('📜 Available PHP Versions');
+        $this->info('📜 Available PHP Versions');
         $this->line('');
  
         if (Filesystem::has(storage_path('versions.json'))) {

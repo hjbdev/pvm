@@ -28,15 +28,10 @@ class HelpCommand extends Command
     public function handle()
     {
         $this->line('');
-        $this->line('');
-        $this->line('');
         $this->info('📜 pvm - PHP Version Manager');
-        $this->line('');
-        $this->line('');
         $this->line('');
  
         $this->info('Available commands:');
-        $this->line('');
         $this->line('');
 
         foreach(app()->commands() as $command) {
