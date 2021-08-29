@@ -6,6 +6,9 @@
     "type": "library",
     "license": "MIT",
     "version": "0.2.1",
+    "scripts": {
+        "test": "./vendor/bin/pest"
+    },
     "support": {
         "issues": "https://github.com/hjbdev/pvm/issues",
         "source": "https://github.com/hjbdev/pvm"
