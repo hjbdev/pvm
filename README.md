@@ -10,6 +10,8 @@ This utility changes that.
 
 The installation process is a little convoluted. You need PHP already installed for it to work, which I admit isn't ideal.
 
+[Packagist](https://packagist.org/packages/hjbdev/pvm)
+
 ```
 composer global require hjbdev/pvm
 ```
