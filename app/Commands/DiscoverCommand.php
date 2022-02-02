@@ -42,11 +42,24 @@ class DiscoverCommand extends Command
         }
 
         foreach ($dirs as $dir) {
-            $exe = $dir . DIRECTORY_SEPARATOR . 'php.exe';
-            if(file_exists($exe)) {
-                $version = ExeInfo::getFileVersion($exe);
+            $exe = $dir . DIRECTORY_SEPARATOR . 'php' . (windows_os() ? '.exe' : '');
 
-                // $version = $exeInfo['FileVersion'];
+            if(file_exists($exe)) {
+                // $version = ExeInfo::getFileVersion($exe);
+
+                $output = shell_exec($exe . ' -v');
+
+                $matches = [];
+
+                preg_match('/PHP (\d+).(\d+).(\d+)/', $output, $matches);
+
+                if(count($matches) === 0) {
+                    $this->error('Something went wrong while detecting PHP versions.');
+                    die;
+                }
+
+                $version = str_replace('PHP ', '', $matches[0]);
+
                 list($major, $minor, $patch) = explode('.', $version);
 
                 $existing = $versions->where('path', $dir)->first();
