@@ -58,15 +58,19 @@ function collect($arr = [])
     return new Collection($arr);
 }
 
-function dump($data)
-{
-    var_dump($data);
+if(!function_exists('dump')){
+    function dump($data)
+    {
+        var_dump($data);
+    }
 }
 
-function dd($data)
-{
-    dump($data);
-    die;
+if(!function_exists('dd')){
+    function dd($data)
+    {
+        dump($data);
+        die;
+    }
 }
 
 function app()
