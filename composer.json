@@ -36,7 +36,10 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "optimize-autoloader": true,
-        "disable-tls": true
+        "disable-tls": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true,

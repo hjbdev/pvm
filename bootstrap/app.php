@@ -2,6 +2,6 @@
 
 include 'helpers.php';
 
-$app = app();
+$app = pvm_app();
 
 $app->handle();
