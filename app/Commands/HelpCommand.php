@@ -34,7 +34,7 @@ class HelpCommand extends Command
         $this->info('Available commands:');
         $this->line('');
 
-        foreach(app()->commands() as $command) {
+        foreach(pvm_app()->commands() as $command) {
             $this->line(Color::GREEN . $command->signature() . Color::RESET . ' - ' . $command->description());
             $this->line('');
         }

@@ -31,7 +31,7 @@ class DiscoverCommand extends Command
         $this->info('🔎 Discovering PHP Versions...');
         $this->line('');
         
-        $path = app()->argument(1) ?: 'C:\laragon\bin\php';
+        $path = pvm_app()->argument(1) ?: 'C:\laragon\bin\php';
         $dirs = Filesystem::directories($path);
         $discovered = 0;
 

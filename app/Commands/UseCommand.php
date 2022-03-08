@@ -29,8 +29,8 @@ class UseCommand extends Command
     {
         $versionStr = null;
 
-        if(app()->argument(1)) {
-            $versionStr = app()->argument(1);
+        if(pvm_app()->argument(1)) {
+            $versionStr = pvm_app()->argument(1);
         } else {
             $this->error('Please provide a version.');
             exit(1);
