@@ -16,7 +16,9 @@ The installation process is a little convoluted. You need PHP already installed 
 composer global require hjbdev/pvm
 ```
 
-Type `pvm discover`, then copy the path from `pvm path` and paste it into your path in the Windows Environment variables.
+Type `pvm discover`, then copy the path from `pvm path` and paste it into your path in the Windows Environment variables. Make sure the pvm path is **above** any versions of PHP in your environment variables, otherwise it will not work.
+
+Alternatively, remove any other versions in your environment variables.
 
 ## Commands
 
