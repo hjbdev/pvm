@@ -28,8 +28,8 @@ func main() {
 		commands.Help(false)
 	// case "list":
 	// 	commands.List()
-	// case "install":
-	// 	commands.Install()
+	case "install":
+		commands.Install()
 	case "discover":
 		commands.Discover(args[1:])
 	default:
