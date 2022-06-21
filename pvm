@@ -1,6 +1,0 @@
-#!/usr/bin/env php
-<?php
-
-$autoloader = require file_exists(__DIR__.'/vendor/autoload.php') ?  __DIR__.'/vendor/autoload.php' : __DIR__.'/../../autoload.php';
-
-$app = require_once __DIR__.'/bootstrap/app.php';
