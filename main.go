@@ -16,6 +16,7 @@ func main() {
 	if os != "windows" {
 		color.Red("pvm currently only works on Windows.")
 		color.Red("This OS is not supported and may not function correctly.")
+		color.White("")
 	}
 
 	if len(args) == 0 {
@@ -29,7 +30,7 @@ func main() {
 	// case "list":
 	// 	commands.List()
 	case "install":
-		commands.Install()
+		commands.Install(args)
 	case "discover":
 		commands.Discover(args[1:])
 	default:
