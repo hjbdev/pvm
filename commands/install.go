@@ -1,10 +1,14 @@
 package commands
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -119,6 +123,14 @@ func Install(args []string) {
 			desiredVersion = version
 			break
 		}
+
+		// Major version match, find the highest minor version if
+		if version.Major == desiredMajorVersion && desiredMinorVersion == "" {
+			if version.Minor > desiredMinorVersion {
+				desiredVersion = version
+			}
+		}
+
 		// Major and minor version match, find the highest patch version
 		if version.Major == desiredMajorVersion && version.Minor == desiredMinorVersion {
 			if version.Patch > desiredVersion.Patch {
@@ -138,5 +150,116 @@ func Install(args []string) {
 		}
 	}
 
-	fmt.Println(desiredVersion)
+	fmt.Println("Downloading PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch)
+
+	homeDir, err := os.UserHomeDir()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// check if .pvm folder exists
+	if _, err := os.Stat(homeDir + "/.pvm"); os.IsNotExist(err) {
+		os.Mkdir(homeDir+"/.pvm", 0755)
+	}
+
+	// check if .pvm/versions folder exists
+	if _, err := os.Stat(homeDir + "/.pvm/versions"); os.IsNotExist(err) {
+		os.Mkdir(homeDir+"/.pvm/versions", 0755)
+	}
+
+	// Get the data
+	downloadResponse, err := http.Get("https://windows.php.net" + desiredVersion.Url)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer downloadResponse.Body.Close()
+
+	// zip filename from url
+	zipFileName := strings.Split(desiredVersion.Url, "/")[len(strings.Split(desiredVersion.Url, "/"))-1]
+
+	// Create the file
+	out, err := os.Create(homeDir + "/.pvm/versions/" + zipFileName)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, downloadResponse.Body)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// extract the zip file to a folder
+	fmt.Println("Unzipping PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch)
+	Unzip(homeDir+"/.pvm/versions/"+zipFileName, homeDir+"/.pvm/versions/"+strings.Replace(zipFileName, ".zip", "", -1))
+
+	fmt.Println("Done")
+}
+
+func Unzip(src, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := r.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	os.MkdirAll(dest, 0755)
+
+	// Closure to address file descriptors issue with all the deferred .Close() methods
+	extractAndWriteFile := func(f *zip.File) error {
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := rc.Close(); err != nil {
+				panic(err)
+			}
+		}()
+
+		path := filepath.Join(dest, f.Name)
+
+		// Check for ZipSlip (Directory traversal)
+		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", path)
+		}
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(path, f.Mode())
+		} else {
+			os.MkdirAll(filepath.Dir(path), f.Mode())
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				return err
+			}
+			defer func() {
+				if err := f.Close(); err != nil {
+					panic(err)
+				}
+			}()
+
+			_, err = io.Copy(f, rc)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	for _, f := range r.File {
+		err := extractAndWriteFile(f)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
