@@ -8,7 +8,7 @@ This utility changes that.
 
 ## Installation
 
-The installation process is a little convoluted. You need PHP already installed for it to work, which I admit isn't ideal.
+The installation process is a little convoluted. You need PHP already installed for it to work, which I admit isn't ideal. ([v2 will fix this!](https://github.com/hjbdev/pvm/pull/11))
 
 [Packagist](https://packagist.org/packages/hjbdev/pvm)
 
