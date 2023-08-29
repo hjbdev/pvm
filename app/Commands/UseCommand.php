@@ -47,8 +47,8 @@ class UseCommand extends Command
         }
 
         $versions = $versions->where('major_version', $major);
-        if($minor) $versions = $versions->where('minor_version', $minor);
-        if($patch) $versions = $versions->where('patch_version', $patch);
+        if($minor !== null) $versions = $versions->where('minor_version', $minor);
+        if($patch !== null) $versions = $versions->where('patch_version', $patch);
 
 
         if($versions->count() > 1) {
