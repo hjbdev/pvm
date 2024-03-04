@@ -2,21 +2,25 @@ package main
 
 import (
 	"hjbdev/pvm/commands"
+	"hjbdev/pvm/theme"
 	"os"
 	"runtime"
-
-	"github.com/fatih/color"
 )
 
 func main() {
 	args := os.Args[1:]
 
 	os := runtime.GOOS
+	arch := runtime.GOARCH
 
 	if os != "windows" {
-		color.Red("pvm currently only works on Windows.")
-		color.Red("This OS is not supported and may not function correctly.")
-		color.White("")
+		theme.Error("pvm currently only works on Windows.")
+		return
+	}
+
+	if arch != "amd64" {
+		theme.Error("pvm currently only works on 64-bit systems.")
+		return
 	}
 
 	if len(args) == 0 {
@@ -27,12 +31,14 @@ func main() {
 	switch args[0] {
 	case "help":
 		commands.Help(false)
-	// case "list":
-	// 	commands.List()
+	case "list":
+		commands.List()
+	case "path":
+		commands.Path()
 	case "install":
 		commands.Install(args)
-	case "discover":
-		commands.Discover(args[1:])
+	case "use":
+		commands.Use(args[1:])
 	default:
 		commands.Help(true)
 	}

@@ -3,16 +3,15 @@ package commands
 import (
 	"archive/zip"
 	"fmt"
+	"hjbdev/pvm/common"
+	"hjbdev/pvm/theme"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/fatih/color"
 )
 
 type Version struct {
@@ -25,23 +24,41 @@ type Version struct {
 
 func Install(args []string) {
 	if len(args) < 2 {
-		color.Red("You must specify a version to install.")
+		theme.Error("You must specify a version to install.")
 		return
 	}
 
-	versionRe := regexp.MustCompile(`([0-9]{1,3})(?:.([0-9]{1,3}))?(?:.([0-9]{1,3}))?`)
+	desireThreadSafe := true
+	var threadSafeString string
+	if desireThreadSafe {
+		threadSafeString = "thread safe"
+	} else {
+		threadSafeString = "non-thread safe"
+	}
 
-	desiredVersionMatches := versionRe.FindAllStringSubmatch(args[1], -1)
+	if len(args) > 2 {
+		if args[2] == "nts" {
+			desireThreadSafe = false
+		}
+	}
 
-	if len(desiredVersionMatches) == 0 {
-		color.Red("Invalid version specified")
+	if desireThreadSafe {
+		theme.Warning("Thread safe version will be installed")
+	} else {
+		theme.Warning("Non-thread safe version will be installed")
+	}
+
+	desiredVersionNumbers := common.GetVersion(args[1])
+
+	if desiredVersionNumbers == (common.Version{}) {
+		theme.Error("Invalid version specified")
 		return
 	}
 
 	// Get the desired version from the user input
-	desiredMajorVersion := desiredVersionMatches[0][1]
-	desiredMinorVersion := desiredVersionMatches[0][2]
-	desiredPatchVersion := desiredVersionMatches[0][3]
+	desiredMajorVersion := desiredVersionNumbers.Major
+	desiredMinorVersion := desiredVersionNumbers.Minor
+	desiredPatchVersion := desiredVersionNumbers.Patch
 
 	// perform get request to https://windows.php.net/downloads/releases/archives/
 	resp, err := http.Get("https://windows.php.net/downloads/releases/archives/")
@@ -49,7 +66,7 @@ func Install(args []string) {
 		log.Fatalln(err)
 	}
 	// We Read the response body on the line below.
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -96,12 +113,17 @@ func Install(args []string) {
 			threadSafe = false
 		}
 
-		// regex match name
-		versionMatches := versionRe.FindAllStringSubmatch(name, -1)
+		// make sure we only get x64 versions
+		if name != "" && !strings.Contains(name, "x64") {
+			continue
+		}
 
-		major := versionMatches[0][1]
-		minor := versionMatches[0][2]
-		patch := versionMatches[0][3]
+		// regex match name
+		versionNumbers := common.GetVersion(name)
+
+		major := versionNumbers.Major
+		minor := versionNumbers.Minor
+		patch := versionNumbers.Patch
 
 		// push to versions
 		versions = append(versions, Version{
@@ -114,43 +136,26 @@ func Install(args []string) {
 	}
 
 	// find desired version
-	desiredVersion := Version{}
+	var desiredVersion Version
 
-	for _, version := range versions {
-		// Exact match
-		if version.Major == desiredMajorVersion && version.Minor == desiredMinorVersion && version.Patch == desiredPatchVersion {
-			fmt.Println("Exact match found")
-			desiredVersion = version
-			break
-		}
-
-		// Major version match, find the highest minor version if
-		if version.Major == desiredMajorVersion && desiredMinorVersion == "" {
-			if version.Minor > desiredMinorVersion {
-				desiredVersion = version
-			}
-		}
-
-		// Major and minor version match, find the highest patch version
-		if version.Major == desiredMajorVersion && version.Minor == desiredMinorVersion {
-			if version.Patch > desiredVersion.Patch {
-				desiredVersion = version
-			}
-		}
-		// Major version matches, find the highest patch version for a 0 minor version
-		if version.Major == desiredMajorVersion {
-			if version.Minor == "0" {
-				desiredVersion = version
-			}
-			if version.Minor == desiredMinorVersion {
-				if version.Patch > desiredVersion.Patch {
-					desiredVersion = version
-				}
-			}
-		}
+	if desiredMajorVersion != "" && desiredMinorVersion != "" && desiredPatchVersion != "" {
+		desiredVersion = FindExactVersion(versions, desiredMajorVersion, desiredMinorVersion, desiredPatchVersion, desireThreadSafe)
 	}
 
-	fmt.Println("Downloading PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch)
+	if desiredMajorVersion != "" && desiredMinorVersion != "" && desiredPatchVersion == "" {
+		desiredVersion = FindLatestPatch(versions, desiredMajorVersion, desiredMinorVersion, desireThreadSafe)
+	}
+
+	if desiredMajorVersion != "" && desiredMinorVersion == "" && desiredPatchVersion == "" {
+		desiredVersion = FindLatestMinor(versions, desiredMajorVersion, desireThreadSafe)
+	}
+
+	if desiredVersion == (Version{}) {
+		theme.Error("Could not find the desired version: " + args[1] + " " + threadSafeString)
+		return
+	}
+
+	fmt.Println("Installing PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch + " " + threadSafeString)
 
 	homeDir, err := os.UserHomeDir()
 
@@ -160,13 +165,17 @@ func Install(args []string) {
 
 	// check if .pvm folder exists
 	if _, err := os.Stat(homeDir + "/.pvm"); os.IsNotExist(err) {
+		theme.Info("Creating .pvm folder in home directory")
 		os.Mkdir(homeDir+"/.pvm", 0755)
 	}
 
 	// check if .pvm/versions folder exists
 	if _, err := os.Stat(homeDir + "/.pvm/versions"); os.IsNotExist(err) {
+		theme.Info("Creating .pvm/versions folder in home directory")
 		os.Mkdir(homeDir+"/.pvm/versions", 0755)
 	}
+
+	theme.Info("Downloading")
 
 	// Get the data
 	downloadResponse, err := http.Get("https://windows.php.net" + desiredVersion.Url)
@@ -179,25 +188,41 @@ func Install(args []string) {
 	// zip filename from url
 	zipFileName := strings.Split(desiredVersion.Url, "/")[len(strings.Split(desiredVersion.Url, "/"))-1]
 
+	// check if zip already exists
+	if _, err := os.Stat(homeDir + "/.pvm/versions/" + zipFileName); err == nil {
+		theme.Error("PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch + " " + threadSafeString + " already exists")
+		return
+	}
+
 	// Create the file
 	out, err := os.Create(homeDir + "/.pvm/versions/" + zipFileName)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer out.Close()
 
 	// Write the body to file
 	_, err = io.Copy(out, downloadResponse.Body)
 
 	if err != nil {
+		out.Close()
 		log.Fatalln(err)
 	}
 
+	// Close the file
+	out.Close()
+
 	// extract the zip file to a folder
-	fmt.Println("Unzipping PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch)
+	theme.Info("Unzipping")
 	Unzip(homeDir+"/.pvm/versions/"+zipFileName, homeDir+"/.pvm/versions/"+strings.Replace(zipFileName, ".zip", "", -1))
 
-	fmt.Println("Done")
+	// remove the zip file
+	theme.Info("Cleaning up")
+	err = os.Remove(homeDir + "/.pvm/versions/" + zipFileName)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	theme.Success("Finished installing PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch + " " + threadSafeString)
 }
 
 func Unzip(src, dest string) error {
@@ -262,4 +287,53 @@ func Unzip(src, dest string) error {
 	}
 
 	return nil
+}
+
+func FindExactVersion(versions []Version, major string, minor string, patch string, threadSafe bool) Version {
+	for _, version := range versions {
+		if version.ThreadSafe != threadSafe {
+			continue
+		}
+		if version.Major == major && version.Minor == minor && version.Patch == patch {
+			return version
+		}
+	}
+
+	return Version{}
+}
+
+func FindLatestPatch(versions []Version, major string, minor string, threadSafe bool) Version {
+	latestPatch := Version{}
+
+	for _, version := range versions {
+		if version.ThreadSafe != threadSafe {
+			continue
+		}
+		if version.Major == major && version.Minor == minor {
+			if latestPatch.Patch == "" || version.Patch > latestPatch.Patch {
+				latestPatch = version
+			}
+		}
+	}
+
+	return latestPatch
+}
+
+func FindLatestMinor(versions []Version, major string, threadSafe bool) Version {
+	latestMinor := Version{}
+
+	for _, version := range versions {
+		if version.ThreadSafe != threadSafe {
+			continue
+		}
+		if version.Major == major {
+			if latestMinor.Minor == "" || version.Minor > latestMinor.Minor {
+				if latestMinor.Patch == "" || version.Patch > latestMinor.Patch {
+					latestMinor = version
+				}
+			}
+		}
+	}
+
+	return latestMinor
 }
