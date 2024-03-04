@@ -27,12 +27,12 @@ pvm path
 Will tell you what to put in your Path variable.
 
 ```
-pvm use 8.2
+pvm use 8.2.9
 ```
 > [!NOTE]  
 > Versions must be specified exactly in the *use* command.
 
-Will switch your currently active PHP version to PHP 8.2
+Will switch your currently active PHP version to PHP 8.2.9
 
 ```
 pvm install 8.2
