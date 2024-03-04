@@ -1,5 +1,8 @@
 # PVM for Windows
 
+> [!TIP]
+> Looking for the 0.x (composer) version? See the [v0 branch](https://github.com/hjbdev/pvm/tree/v0).
+
 Removing the hassle of changing PHP versions in the CLI on Windows.
 
 This package has a much more niche use case than nvm does. When developing on Windows and using the integrated terminal, it's quite difficult to get those terminals to _actually_ listen to PATH changes.
@@ -8,7 +11,7 @@ This utility changes that.
 
 ## Installation
 
-Download the latest pvm version from the releases page.
+Download the latest pvm version from the releases page (1.0-alpha-1, it's currently a pre-release).
 
 Create the folder `%UserProfile%\.pvm\bin` (e.g. `C:\Users\Harry\.pvm\bin`) and drop the pvm exe in there. Add the folder to your PATH.
 
