@@ -5,7 +5,6 @@ import (
 	"hjbdev/pvm/theme"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -72,20 +71,41 @@ func Use(args []string) {
 		return
 	}
 
-	// remove old symlink
-	linkPath := filepath.Join(homeDir, ".pvm", "bin", "php")
-	if _, err := os.Stat(linkPath); err == nil {
-		os.Remove(linkPath)
+	// remove old bat script
+	batPath := filepath.Join(homeDir, ".pvm", "bin", "php.bat")
+	if _, err := os.Stat(batPath); err == nil {
+		os.Remove(batPath)
 	}
 
-	// create symlink
+	// remove the old sh script
+	shPath := filepath.Join(homeDir, ".pvm", "bin", "php")
+	if _, err := os.Stat(shPath); err == nil {
+		os.Remove(shPath)
+	}
+
 	versionPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion, "php.exe")
 
-	cmd := exec.Command("cmd", "/c", "mklink", "/H", linkPath, versionPath)
-	err = cmd.Run()
+	// create bat script
+	batCommand := "@echo off \n"
+	batCommand = batCommand + "set filepath=\"" + versionPath + "\"\n"
+	batCommand = batCommand + "set arguments=%*\n"
+	batCommand = batCommand + "%filepath% %arguments%\n"
+
+	err = os.WriteFile(batPath, []byte(batCommand), 0755)
+
 	if err != nil {
-		theme.Error("Failed to create symlink")
-		return
+		log.Fatalln(err)
+	}
+
+	// create sh script
+	shCommand := "#!/bin/bash\n"
+	shCommand = shCommand + "filepath=\"" + versionPath + "\"\n"
+	shCommand = shCommand + "\"$filepath\" \"$@\""
+
+	err = os.WriteFile(shPath, []byte(shCommand), 0755)
+
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	var threadSafeString string
