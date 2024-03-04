@@ -7,6 +7,7 @@ import (
 
 func Help(notFoundError bool) {
 	theme.Title("pvm: PHP Version Manager")
+	theme.Info("Version 1.0-alpha-1")
 
 	if notFoundError {
 		theme.Error("Command not found")
