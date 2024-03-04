@@ -8,29 +8,15 @@ This utility changes that.
 
 ## Installation
 
-The installation process is a little convoluted. You need PHP already installed for it to work, which I admit isn't ideal. ([v2 will fix this!](https://github.com/hjbdev/pvm/pull/11))
+Download the latest pvm version from the releases page.
 
-[Packagist](https://packagist.org/packages/hjbdev/pvm)
-
-```
-composer global require hjbdev/pvm
-```
-
-Type `pvm discover`, then copy the path from `pvm path` and paste it into your path in the Windows Environment variables. Make sure the pvm path is **above** any versions of PHP in your environment variables, otherwise it will not work.
-
-Alternatively, remove any other versions in your environment variables.
+Create the folder `%UserProfile%\.pvm\bin` (e.g. `C:\Users\Harry\.pvm\bin`) and drop the pvm exe in there. Add the folder to your PATH.
 
 ## Commands
-
-```
-pvm discover <path?>
-```
-The path variable is optional, by default it will go to the Laragon bin folder (C:\laragon\bin\php). Provide a path to where all your PHP installations are.
-
 ```
 pvm list
 ```
-Will list out all the available PHP versions you have
+Will list out all the available PHP versions you have installed
 
 ```
 pvm path
@@ -38,11 +24,17 @@ pvm path
 Will tell you what to put in your Path variable.
 
 ```
-pvm use 7.1
+pvm use 8.2
 ```
-Will switch your currently active PHP version to PHP 7.1
+> [!NOTE]  
+> Versions must be specified exactly in the *use* command.
+
+Will switch your currently active PHP version to PHP 8.2
 
 ```
-pvm clear
+pvm install 8.2
 ```
-Clears all the detected php versions from `pvm discover`
+> [!NOTE]  
+> The install command will automatically determine the newest minor/patch versions if they are not specified
+
+Will install PHP 8.2 at the latest patch.
