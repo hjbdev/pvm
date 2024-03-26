@@ -1,7 +1,7 @@
 package theme
 
 import (
-	color "github.com/fatih/color"
+	"github.com/fatih/color"
 )
 
 var title = color.New(color.FgWhite).Add(color.Bold, color.Underline)

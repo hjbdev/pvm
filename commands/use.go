@@ -1,11 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"hjbdev/pvm/common"
 	"hjbdev/pvm/theme"
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -53,22 +55,61 @@ func Use(args []string) {
 		log.Fatalln(err)
 	}
 
+	// transform to easily sortable slice
+	var availableVersions []versionMeta
+	for i, version := range versions {
+		availableVersions = append(availableVersions, versionMeta{
+			number: common.GetVersion(version.Name()),
+			folder: versions[i],
+		})
+	}
+
 	// check if version exists
-	selectedVersion := ""
-	for _, version := range versions {
-		versionNumbers := common.GetVersion(version.Name())
-		if versionNumbers.Major+"."+versionNumbers.Minor+"."+versionNumbers.Patch == args[0] {
-			if threadSafe && !strings.Contains(version.Name(), "nts") {
-				selectedVersion = version.Name()
-			} else if !threadSafe && strings.Contains(version.Name(), "nts") {
-				selectedVersion = version.Name()
+	var selectedVersion *versionMeta
+	for _, version := range availableVersions {
+		if version.number.Major+"."+version.number.Minor+"."+version.number.Patch == args[0] {
+			if threadSafe && !strings.Contains(version.folder.Name(), "nts") {
+				selectedVersion = &versionMeta{
+					number: version.number,
+					folder: version.folder,
+				}
+			} else if !threadSafe && strings.Contains(version.folder.Name(), "nts") {
+				selectedVersion = &versionMeta{
+					number: version.number,
+					folder: version.folder,
+				}
 			}
 		}
 	}
 
-	if selectedVersion == "" {
-		theme.Error("The specified version is not installed.")
-		return
+	// if patch version is not specified, use the newest matching major.minor
+	if selectedVersion == nil {
+		// Sort by newest patch first
+		availableVersions = sortVersions(availableVersions)
+
+		for _, version := range availableVersions {
+			if version.number.Major+"."+version.number.Minor == args[0] {
+				if threadSafe && !strings.Contains(version.folder.Name(), "nts") {
+					selectedVersion = &versionMeta{
+						number: version.number,
+						folder: version.folder,
+					}
+				} else if !threadSafe && strings.Contains(version.folder.Name(), "nts") {
+					selectedVersion = &versionMeta{
+						number: version.number,
+						folder: version.folder,
+					}
+				}
+				break
+			}
+		}
+
+		if selectedVersion == nil {
+			theme.Error("The specified version is not installed.")
+			return
+		} else {
+			theme.Warning(fmt.Sprintf("No patch version specified, assumed newest patch version %s.", selectedVersion.number.String()))
+		}
 	}
 
 	// remove old bat script
@@ -83,7 +124,7 @@ func Use(args []string) {
 		os.Remove(shPath)
 	}
 
-	versionPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion, "php.exe")
+	versionPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name(), "php.exe")
 
 	// create bat script
 	batCommand := "@echo off \n"
@@ -115,5 +156,24 @@ func Use(args []string) {
 		threadSafeString = "thread safe"
 	}
 
-	theme.Success("Using PHP " + args[0] + " " + threadSafeString)
+	theme.Success("Using PHP " + selectedVersion.number.String() + " " + threadSafeString)
+}
+
+func sortVersions(in []versionMeta) []versionMeta {
+	sort.Slice(in, func(i, j int) bool {
+		if in[i].number.Major != in[j].number.Major {
+			return in[i].number.Major > in[j].number.Major
+		}
+		if in[i].number.Minor != in[j].number.Minor {
+			return in[i].number.Minor > in[j].number.Minor
+		}
+		return in[i].number.Patch > in[j].number.Patch
+	})
+
+	return in
+}
+
+type versionMeta struct {
+	number common.Version
+	folder os.DirEntry
 }
