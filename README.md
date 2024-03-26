@@ -30,7 +30,7 @@ Will tell you what to put in your Path variable.
 pvm use 8.2.9
 ```
 > [!NOTE]  
-> Versions must be specified exactly in the *use* command.
+> Versions must have major.minor specified in the *use* command. If a .patch version is omitted, newest available patch version is chosen.
 
 Will switch your currently active PHP version to PHP 8.2.9
 
