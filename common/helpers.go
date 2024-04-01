@@ -1,11 +1,18 @@
 package common
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+)
 
 type Version struct {
 	Major string
 	Minor string
 	Patch string
+}
+
+func (v Version) String() string {
+	return fmt.Sprintf("%s.%s.%s", v.Major, v.Minor, v.Patch)
 }
 
 func GetVersion(text string) Version {
