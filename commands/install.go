@@ -29,17 +29,17 @@ func Install(args []string) {
 	}
 
 	desireThreadSafe := true
+	if len(args) > 2 {
+		if args[2] == "nts" {
+			desireThreadSafe = false
+		}
+	}
+
 	var threadSafeString string
 	if desireThreadSafe {
 		threadSafeString = "thread safe"
 	} else {
 		threadSafeString = "non-thread safe"
-	}
-
-	if len(args) > 2 {
-		if args[2] == "nts" {
-			desireThreadSafe = false
-		}
 	}
 
 	if desireThreadSafe {
