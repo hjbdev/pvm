@@ -6,6 +6,7 @@ import (
 	"hjbdev/pvm/theme"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -150,6 +151,32 @@ func Use(args []string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	// create directory link to ext directory
+	extensionDirPath := filepath.Join(versionFolderPath, "ext")
+	extensionLinkPath := filepath.Join(binPath, "ext")
+
+	// delete the old link first if it exists
+	if _, err := os.Stat(binPath); err == nil {
+		cmd := exec.Command("cmd", "/C", "rmdir", extensionLinkPath)
+		_, err := cmd.Output()
+		if err != nil {
+			log.Fatalln("Error deleting ext directory directory link:", err)
+			return
+		}
+	}
+
+	// create directory link - uses cmd since using os.Symlink did require extra permissions
+	cmd := exec.Command("cmd", "/C", "mklink", "/J", extensionLinkPath, extensionDirPath)
+
+	output, err := cmd.Output()
+	if err != nil {
+		log.Fatalln("Error creating ext directory symlink:", err)
+		return
+	} else {
+		theme.Info(string(output))
+	}
+	// end of ext directory link creation
 
 	var threadSafeString string
 	if threadSafe {
