@@ -45,8 +45,9 @@ func Use(args []string) {
 	}
 
 	// check if .pvm/bin folder exists
-	if _, err := os.Stat(filepath.Join(homeDir, ".pvm", "bin")); os.IsNotExist(err) {
-		os.Mkdir(filepath.Join(homeDir, ".pvm", "bin"), 0755)
+	binPath := filepath.Join(homeDir, ".pvm", "bin")
+	if _, err := os.Stat(binPath); os.IsNotExist(err) {
+		os.Mkdir(binPath, 0755)
 	}
 
 	// get all folders in .pvm/versions
@@ -113,18 +114,19 @@ func Use(args []string) {
 	}
 
 	// remove old bat script
-	batPath := filepath.Join(homeDir, ".pvm", "bin", "php.bat")
+	batPath := filepath.Join(binPath, "php.bat")
 	if _, err := os.Stat(batPath); err == nil {
 		os.Remove(batPath)
 	}
 
 	// remove the old sh script
-	shPath := filepath.Join(homeDir, ".pvm", "bin", "php")
+	shPath := filepath.Join(binPath, "php")
 	if _, err := os.Stat(shPath); err == nil {
 		os.Remove(shPath)
 	}
 
-	versionPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name(), "php.exe")
+	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name())
+	versionPath := filepath.Join(versionFolderPath, "php.exe")
 
 	// create bat script
 	batCommand := "@echo off \n"
