@@ -157,7 +157,7 @@ func Use(args []string) {
 	extensionLinkPath := filepath.Join(binPath, "ext")
 
 	// delete the old link first if it exists
-	if _, err := os.Stat(binPath); err == nil {
+	if _, err := os.Stat(extensionLinkPath); err == nil {
 		cmd := exec.Command("cmd", "/C", "rmdir", extensionLinkPath)
 		_, err := cmd.Output()
 		if err != nil {
