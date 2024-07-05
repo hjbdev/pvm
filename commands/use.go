@@ -180,9 +180,9 @@ func Use(args []string) {
 
 	var threadSafeString string
 	if threadSafe {
-		threadSafeString = "non-thread safe"
-	} else {
 		threadSafeString = "thread safe"
+	} else {
+		threadSafeString = "non-thread safe"
 	}
 
 	theme.Success("Using PHP " + selectedVersion.number.String() + " " + threadSafeString)
