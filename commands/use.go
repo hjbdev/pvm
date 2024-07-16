@@ -114,22 +114,35 @@ func Use(args []string) {
 		}
 	}
 
-	// remove old bat script
+	// remove old php bat script
 	batPath := filepath.Join(binPath, "php.bat")
 	if _, err := os.Stat(batPath); err == nil {
 		os.Remove(batPath)
 	}
 
-	// remove the old sh script
+	// remove the old php sh script
 	shPath := filepath.Join(binPath, "php")
 	if _, err := os.Stat(shPath); err == nil {
 		os.Remove(shPath)
 	}
 
+	// remove old php-cgi bat script
+	batPathCGI := filepath.Join(binPath, "php-cgi.bat")
+	if _, err := os.Stat(batPathCGI); err == nil {
+		os.Remove(batPathCGI)
+	}
+
+	// remove old php-cgi sh script
+	shPathCGI := filepath.Join(binPath, "php-cgi")
+	if _, err := os.Stat(shPathCGI); err == nil {
+		os.Remove(shPathCGI)
+	}
+
 	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name())
 	versionPath := filepath.Join(versionFolderPath, "php.exe")
+	versionPathCGI := filepath.Join(versionFolderPath, "php-cgi.exe")
 
-	// create bat script
+	// create bat script for php
 	batCommand := "@echo off \n"
 	batCommand = batCommand + "set filepath=\"" + versionPath + "\"\n"
 	batCommand = batCommand + "set arguments=%*\n"
@@ -141,12 +154,35 @@ func Use(args []string) {
 		log.Fatalln(err)
 	}
 
-	// create sh script
+	// create sh script for php
 	shCommand := "#!/bin/bash\n"
 	shCommand = shCommand + "filepath=\"" + versionPath + "\"\n"
 	shCommand = shCommand + "\"$filepath\" \"$@\""
 
 	err = os.WriteFile(shPath, []byte(shCommand), 0755)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// create bat script for php-cgi
+	batCommandCGI := "@echo off \n"
+	batCommandCGI = batCommandCGI + "set filepath=\"" + versionPathCGI + "\"\n"
+	batCommandCGI = batCommandCGI + "set arguments=%*\n"
+	batCommandCGI = batCommandCGI + "%filepath% %arguments%\n"
+
+	err = os.WriteFile(batPathCGI, []byte(batCommandCGI), 0755)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// create sh script for php-cgi
+	shCommandCGI := "#!/bin/bash\n"
+	shCommandCGI = shCommandCGI + "filepath=\"" + versionPathCGI + "\"\n"
+	shCommandCGI = shCommandCGI + "\"$filepath\" \"$@\""
+
+	err = os.WriteFile(shPathCGI, []byte(shCommandCGI), 0755)
 
 	if err != nil {
 		log.Fatalln(err)
