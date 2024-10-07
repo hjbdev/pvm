@@ -7,16 +7,22 @@ import (
 )
 
 type Version struct {
-	Major int
-	Minor int
-	Patch int
+	Major      int
+	Minor      int
+	Patch      int
+	Url        string
+	ThreadSafe bool
 }
 
 func (v Version) String() string {
-	return fmt.Sprintf("%s.%s.%s", v.Major, v.Minor, v.Patch)
+	semantic := fmt.Sprintf("%v.%v.%v", v.Major, v.Minor, v.Patch)
+	if v.ThreadSafe {
+		return semantic + " thread safe"
+	}
+	return semantic + " non-thread safe"
 }
 
-func GetVersion(text string) Version {
+func GetVersion(text string, safe bool, url string) Version {
 	versionRe := regexp.MustCompile(`([0-9]{1,3})(?:.([0-9]{1,3}))?(?:.([0-9]{1,3}))?`)
 	matches := versionRe.FindAllStringSubmatch(text, -1)
 	if len(matches) == 0 {
@@ -39,8 +45,10 @@ func GetVersion(text string) Version {
 	}
 
 	return Version{
-		Major: major,
-		Minor: minor,
-		Patch: patch,
+		Major:      major,
+		Minor:      minor,
+		Patch:      patch,
+		ThreadSafe: safe,
+		Url:        url,
 	}
 }
