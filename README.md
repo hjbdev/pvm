@@ -41,3 +41,10 @@ pvm install 8.2
 > The install command will automatically determine the newest minor/patch versions if they are not specified
 
 Will install PHP 8.2 at the latest patch.
+
+## Build
+
+To compile the program use:
+```shell
+GOOS=windows GOARCH=amd64 go build -o pvm.exe
+```
