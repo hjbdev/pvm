@@ -31,49 +31,49 @@ func Test_sortVersions_sortsVersionsDescending(t *testing.T) {
 	input := []versionMeta{
 		{
 			number: common.Version{
-				Major: "7",
-				Minor: "4",
-				Patch: "1",
+				Major: 7,
+				Minor: 4,
+				Patch: 1,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "7",
-				Minor: "4",
-				Patch: "2",
+				Major: 7,
+				Minor: 4,
+				Patch: 2,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "3",
-				Patch: "0",
+				Major: 8,
+				Minor: 3,
+				Patch: 0,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "3",
-				Patch: "1",
+				Major: 8,
+				Minor: 3,
+				Patch: 1,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "2",
-				Patch: "0",
+				Major: 8,
+				Minor: 2,
+				Patch: 0,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "2",
-				Patch: "5",
+				Major: 8,
+				Minor: 2,
+				Patch: 5,
 			},
 			folder: fakeDirEntry{},
 		},
@@ -84,49 +84,49 @@ func Test_sortVersions_sortsVersionsDescending(t *testing.T) {
 	assert.Equal(t, []versionMeta{
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "3",
-				Patch: "1",
+				Major: 8,
+				Minor: 3,
+				Patch: 1,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "3",
-				Patch: "0",
+				Major: 8,
+				Minor: 3,
+				Patch: 0,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "2",
-				Patch: "5",
+				Major: 8,
+				Minor: 2,
+				Patch: 5,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "8",
-				Minor: "2",
-				Patch: "0",
+				Major: 8,
+				Minor: 2,
+				Patch: 0,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "7",
-				Minor: "4",
-				Patch: "2",
+				Major: 7,
+				Minor: 4,
+				Patch: 2,
 			},
 			folder: fakeDirEntry{},
 		},
 		{
 			number: common.Version{
-				Major: "7",
-				Minor: "4",
-				Patch: "1",
+				Major: 7,
+				Minor: 4,
+				Patch: 1,
 			},
 			folder: fakeDirEntry{},
 		},

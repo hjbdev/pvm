@@ -3,12 +3,13 @@ package common
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 )
 
 type Version struct {
-	Major string
-	Minor string
-	Patch string
+	Major int
+	Minor int
+	Patch int
 }
 
 func (v Version) String() string {
@@ -22,9 +23,24 @@ func GetVersion(text string) Version {
 		return Version{}
 	}
 
+	major, err := strconv.Atoi(matches[0][1])
+	if err != nil {
+		major = -1
+	}
+
+	minor, err := strconv.Atoi(matches[0][2])
+	if err != nil {
+		minor = -1
+	}
+
+	patch, err := strconv.Atoi(matches[0][3])
+	if err != nil {
+		patch = -1
+	}
+
 	return Version{
-		Major: matches[0][1],
-		Minor: matches[0][2],
-		Patch: matches[0][3],
+		Major: major,
+		Minor: minor,
+		Patch: patch,
 	}
 }

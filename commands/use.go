@@ -69,7 +69,7 @@ func Use(args []string) {
 	// check if version exists
 	var selectedVersion *versionMeta
 	for _, version := range availableVersions {
-		if version.number.Major+"."+version.number.Minor+"."+version.number.Patch == args[0] {
+		if fmt.Sprintf("%d.%d.%d", version.number.Major, version.number.Minor, version.number.Patch) == args[0] {
 			if threadSafe && !strings.Contains(version.folder.Name(), "nts") {
 				selectedVersion = &versionMeta{
 					number: version.number,
@@ -90,7 +90,7 @@ func Use(args []string) {
 		availableVersions = sortVersions(availableVersions)
 
 		for _, version := range availableVersions {
-			if version.number.Major+"."+version.number.Minor == args[0] {
+			if fmt.Sprintf("%d.%d", version.number.Major, version.number.Minor) == args[0] {
 				if threadSafe && !strings.Contains(version.folder.Name(), "nts") {
 					selectedVersion = &versionMeta{
 						number: version.number,

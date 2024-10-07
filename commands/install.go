@@ -15,9 +15,9 @@ import (
 )
 
 type Version struct {
-	Major      string
-	Minor      string
-	Patch      string
+	Major      int
+	Minor      int
+	Patch      int
 	Url        string
 	ThreadSafe bool
 }
@@ -138,24 +138,24 @@ func Install(args []string) {
 	// find desired version
 	var desiredVersion Version
 
-	if desiredMajorVersion != "" && desiredMinorVersion != "" && desiredPatchVersion != "" {
+	if desiredMajorVersion > -1 && desiredMinorVersion > -1 && desiredPatchVersion > -1 {
 		desiredVersion = FindExactVersion(versions, desiredMajorVersion, desiredMinorVersion, desiredPatchVersion, desireThreadSafe)
 	}
 
-	if desiredMajorVersion != "" && desiredMinorVersion != "" && desiredPatchVersion == "" {
+	if desiredMajorVersion > -1 && desiredMinorVersion > -1 && desiredPatchVersion == -1 {
 		desiredVersion = FindLatestPatch(versions, desiredMajorVersion, desiredMinorVersion, desireThreadSafe)
 	}
 
-	if desiredMajorVersion != "" && desiredMinorVersion == "" && desiredPatchVersion == "" {
+	if desiredMajorVersion > -1 && desiredMinorVersion == -1 && desiredPatchVersion == -1 {
 		desiredVersion = FindLatestMinor(versions, desiredMajorVersion, desireThreadSafe)
 	}
 
 	if desiredVersion == (Version{}) {
-		theme.Error("Could not find the desired version: " + args[1] + " " + threadSafeString)
+		theme.Error(fmt.Sprintf("Could not find the desired version: %s %s", args[1], threadSafeString))
 		return
 	}
 
-	fmt.Println("Installing PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch + " " + threadSafeString)
+	fmt.Printf("Installing PHP %d.%d.%d %s\n", desiredVersion.Major, desiredVersion.Minor, desiredVersion.Patch, threadSafeString)
 
 	homeDir, err := os.UserHomeDir()
 
@@ -190,7 +190,7 @@ func Install(args []string) {
 
 	// check if zip already exists
 	if _, err := os.Stat(homeDir + "/.pvm/versions/" + zipFileName); err == nil {
-		theme.Error("PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch + " " + threadSafeString + " already exists")
+		theme.Error(fmt.Sprintf("PHP %d.%d.%d %s already exists", desiredVersion.Major, desiredVersion.Minor, desiredVersion.Patch, threadSafeString))
 		return
 	}
 
@@ -222,7 +222,7 @@ func Install(args []string) {
 		log.Fatalln(err)
 	}
 
-	theme.Success("Finished installing PHP " + desiredVersion.Major + "." + desiredVersion.Minor + "." + desiredVersion.Patch + " " + threadSafeString)
+	theme.Success(fmt.Sprintf("Finished installing PHP %d.%d.%d %s", desiredVersion.Major, desiredVersion.Minor, desiredVersion.Patch, threadSafeString))
 }
 
 func Unzip(src, dest string) error {
@@ -289,7 +289,7 @@ func Unzip(src, dest string) error {
 	return nil
 }
 
-func FindExactVersion(versions []Version, major string, minor string, patch string, threadSafe bool) Version {
+func FindExactVersion(versions []Version, major int, minor int, patch int, threadSafe bool) Version {
 	for _, version := range versions {
 		if version.ThreadSafe != threadSafe {
 			continue
@@ -302,7 +302,7 @@ func FindExactVersion(versions []Version, major string, minor string, patch stri
 	return Version{}
 }
 
-func FindLatestPatch(versions []Version, major string, minor string, threadSafe bool) Version {
+func FindLatestPatch(versions []Version, major int, minor int, threadSafe bool) Version {
 	latestPatch := Version{}
 
 	for _, version := range versions {
@@ -310,7 +310,7 @@ func FindLatestPatch(versions []Version, major string, minor string, threadSafe 
 			continue
 		}
 		if version.Major == major && version.Minor == minor {
-			if latestPatch.Patch == "" || version.Patch > latestPatch.Patch {
+			if latestPatch.Patch == -1 || version.Patch > latestPatch.Patch {
 				latestPatch = version
 			}
 		}
@@ -319,7 +319,7 @@ func FindLatestPatch(versions []Version, major string, minor string, threadSafe 
 	return latestPatch
 }
 
-func FindLatestMinor(versions []Version, major string, threadSafe bool) Version {
+func FindLatestMinor(versions []Version, major int, threadSafe bool) Version {
 	latestMinor := Version{}
 
 	for _, version := range versions {
@@ -327,8 +327,8 @@ func FindLatestMinor(versions []Version, major string, threadSafe bool) Version 
 			continue
 		}
 		if version.Major == major {
-			if latestMinor.Minor == "" || version.Minor > latestMinor.Minor {
-				if latestMinor.Patch == "" || version.Patch > latestMinor.Patch {
+			if latestMinor.Minor == -1 || version.Minor > latestMinor.Minor {
+				if latestMinor.Patch == -1 || version.Patch > latestMinor.Patch {
 					latestMinor = version
 				}
 			}
