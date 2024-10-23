@@ -39,6 +39,8 @@ func main() {
 		commands.Install(args)
 	case "use":
 		commands.Use(args[1:])
+	case "extensions":
+		commands.Extensions(args[1:])
 	default:
 		commands.Help(true)
 	}

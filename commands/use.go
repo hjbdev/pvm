@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+type VersionMeta struct {
+	Name   string
+	Number common.Version
+	Folder os.DirEntry
+}
+
 func Use(args []string) {
 	threadSafe := true
 
@@ -56,7 +62,7 @@ func Use(args []string) {
 		log.Fatalln(err)
 	}
 
-	var selectedVersion *versionMeta
+	var selectedVersion *VersionMeta
 	// loop over all found installed versions
 	for i, version := range versions {
 		safe := true
@@ -65,9 +71,10 @@ func Use(args []string) {
 		}
 		foundVersion := common.GetVersion(version.Name(), safe, "")
 		if threadSafe == foundVersion.ThreadSafe && strings.HasPrefix(foundVersion.String(), args[0]) {
-			selectedVersion = &versionMeta{
-				number: foundVersion,
-				folder: versions[i],
+			selectedVersion = &VersionMeta{
+				Name:   version.Name(),
+				Number: foundVersion,
+				Folder: versions[i],
 			}
 		}
 	}
@@ -79,9 +86,9 @@ func Use(args []string) {
 
 	requestedVersion := common.GetVersion(args[0], threadSafe, "")
 	if requestedVersion.Minor == -1 {
-		theme.Warning(fmt.Sprintf("No minor version specified, assumed newest minor version %s.", selectedVersion.number.String()))
+		theme.Warning(fmt.Sprintf("No minor version specified, assumed newest minor version %s.", selectedVersion.Number.String()))
 	} else if requestedVersion.Patch == -1 {
-		theme.Warning(fmt.Sprintf("No patch version specified, assumed newest patch version %s.", selectedVersion.number.String()))
+		theme.Warning(fmt.Sprintf("No patch version specified, assumed newest patch version %s.", selectedVersion.Number.String()))
 	}
 
 	// remove old php bat script
@@ -108,7 +115,7 @@ func Use(args []string) {
 		os.Remove(shPathCGI)
 	}
 
-	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name())
+	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.Folder.Name())
 	versionPath := filepath.Join(versionFolderPath, "php.exe")
 	versionPathCGI := filepath.Join(versionFolderPath, "php-cgi.exe")
 
@@ -184,10 +191,7 @@ func Use(args []string) {
 	}
 	// end of ext directory link creation
 
-	theme.Success(fmt.Sprintf("Using PHP %s", selectedVersion.number))
-}
+	os.WriteFile(filepath.Join(homeDir, ".pvm", "version"), []byte(selectedVersion.Name), 0755)
 
-type versionMeta struct {
-	number common.Version
-	folder os.DirEntry
+	theme.Success(fmt.Sprintf("Using PHP %s", selectedVersion.Number))
 }

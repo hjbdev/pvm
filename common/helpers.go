@@ -2,8 +2,11 @@ package common
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type Version struct {
@@ -51,4 +54,63 @@ func GetVersion(text string, safe bool, url string) Version {
 		ThreadSafe: safe,
 		Url:        url,
 	}
+}
+
+func GetCurrentVersionFolder() string {
+	homeDir, err := os.UserHomeDir()
+
+	if err != nil {
+		return ""
+	}
+
+	content, err := os.ReadFile(filepath.Join(homeDir, ".pvm", "version"))
+
+	if err != nil {
+		return ""
+	}
+
+	return string(content)
+}
+
+func ReadPhpIni(path string) string {
+	file, err := os.ReadFile(path)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return string(file)
+}
+
+type ExtensionStatus int
+
+const (
+	ExtensionEnabled  ExtensionStatus = 1
+	ExtensionDisabled ExtensionStatus = 2
+	ExtensionNotFound ExtensionStatus = 3
+)
+
+func GetExtensionStatus(ini string, extension string) (ExtensionStatus, int) {
+	lines := regexp.MustCompile(`\r?\n`).Split(ini, -1)
+
+	for index, line := range lines {
+		extensionMatches := regexp.MustCompile(`extension\s*=\s*["']?([^"']+)["']?`).FindStringSubmatch(line)
+
+		if len(extensionMatches) == 0 {
+			continue
+		}
+
+		if extensionMatches[1] == extension {
+			fullLine := lines[index]
+			noWhitespace := strings.TrimSpace(fullLine)
+
+			if strings.HasPrefix(noWhitespace, ";") {
+				return ExtensionDisabled, index
+			} else {
+				return ExtensionEnabled, index
+			}
+		}
+	}
+
+	return ExtensionNotFound, -1
 }

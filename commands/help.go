@@ -14,6 +14,7 @@ func Help(notFoundError bool) {
 	}
 
 	fmt.Println("Available Commands:")
+	fmt.Println("    extensions")
 	fmt.Println("    help")
 	fmt.Println("    install")
 	fmt.Println("    list")
