@@ -1,9 +1,11 @@
 package commands
 
 import (
+	"hjbdev/pvm/common"
 	"hjbdev/pvm/theme"
 	"log"
 	"os"
+
 	"github.com/fatih/color"
 )
 
@@ -35,8 +37,14 @@ func List() {
 
 	theme.Title("Installed PHP versions")
 
+	currentVersion := common.GetCurrentVersionFolder()
+
 	// print all folders
 	for _, version := range versions {
-		color.White("    " + version.Name())
+		if version.Name() == currentVersion {
+			color.White("    " + version.Name() + " (current)")
+		} else {
+			color.White("    " + version.Name())
+		}
 	}
 }
