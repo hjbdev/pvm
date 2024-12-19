@@ -111,11 +111,11 @@ func Use(args []string) {
 	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name())
 	versionPath := filepath.Join(versionFolderPath, "php.exe")
 	versionPathCGI := filepath.Join(versionFolderPath, "php-cgi.exe")
-    envPHPRC := "PHPRC=" + versionFolderPath
+	envPHPFolder := "PHP_FOLDER=" + versionFolderPath
 
 	// create bat script for php
 	batCommand := "@echo off \n"
-    batCommand += "set " + envPHPRC + "\n"
+	batCommand += "set " + envPHPFolder + "\n"
 	batCommand += "set filepath=\"" + versionPath + "\"\n"
 	batCommand += "set arguments=%*\n"
 	batCommand += "%filepath% %arguments%\n"
@@ -129,7 +129,7 @@ func Use(args []string) {
 	// create sh script for php
 	shCommand := "#!/bin/bash\n"
 	shCommand += "filepath=\"" + versionPath + "\"\n"
-	shCommand += envPHPRC + " \"$filepath\" \"$@\""
+	shCommand += envPHPFolder + " \"$filepath\" \"$@\""
 
 	err = os.WriteFile(shPath, []byte(shCommand), 0755)
 
@@ -139,7 +139,7 @@ func Use(args []string) {
 
 	// create bat script for php-cgi
 	batCommandCGI := "@echo off \n"
-    batCommandCGI += "set " + envPHPRC + "\n"
+	batCommandCGI += "set " + envPHPFolder + "\n"
 	batCommandCGI += "set filepath=\"" + versionPathCGI + "\"\n"
 	batCommandCGI += "set arguments=%*\n"
 	batCommandCGI += "%filepath% %arguments%\n"
@@ -153,7 +153,7 @@ func Use(args []string) {
 	// create sh script for php-cgi
 	shCommandCGI := "#!/bin/bash\n"
 	shCommandCGI += "filepath=\"" + versionPathCGI + "\"\n"
-	shCommandCGI += envPHPRC + " \"$filepath\" \"$@\""
+	shCommandCGI += envPHPFolder + " \"$filepath\" \"$@\""
 
 	err = os.WriteFile(shPathCGI, []byte(shCommandCGI), 0755)
 
