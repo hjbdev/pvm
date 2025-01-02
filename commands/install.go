@@ -188,7 +188,13 @@ func Install(args []string) {
 	}
 
 	// install composer
-	composerPath := filepath.Join(phpPath, "composer", "composer.phar")
+	composerFolderPath := filepath.Join(phpPath, "composer")
+	if _, err := os.Stat(composerFolderPath); os.IsNotExist(err) {
+		theme.Info("Creating .pvm/versions folder in home directory")
+		os.Mkdir(composerFolderPath, 0755)
+	}
+
+	composerPath := filepath.Join(composerFolderPath, "composer.phar")
 	composerUrl := "https://getcomposer.org/download/latest-stable/composer.phar"
 	if desiredVersion.LessThan(common.Version{Major: 7, Minor: 2}) {
 		composerUrl = "https://getcomposer.org/download/latest-2.2.x/composer.phar"
