@@ -52,3 +52,60 @@ func GetVersion(text string, safe bool, url string) Version {
 		Url:        url,
 	}
 }
+
+func (v Version) Compare(o Version) int {
+	if v.Major == -1 || o.Major == -1 {
+		return 0
+	}
+	if v.Major != o.Major {
+		if v.Major < o.Major {
+			return -1
+		}
+		return 1
+	}
+
+	if v.Minor == -1 || o.Minor == -1 {
+		return 0
+	}
+	if v.Minor != o.Minor {
+		if v.Minor < o.Minor {
+			return -1
+		}
+		return 1
+	}
+
+	if v.Patch == -1 || o.Patch == -1 {
+		return 0
+	}
+	if v.Patch != o.Patch {
+		if v.Patch < o.Patch {
+			return -1
+		}
+		return 1
+	}
+	return 0
+}
+
+func (v Version) LessThan(other Version) bool {
+	return v.Compare(other) == -1
+}
+
+func (v Version) LessThanOrEqual(other Version) bool {
+	return v.Compare(other) == -1 || v.Compare(other) == 0
+}
+
+func (v Version) GreaterThan(other Version) bool {
+	return v.Compare(other) == 1
+}
+
+func (v Version) GreaterThanOrEqual(other Version) bool {
+	return v.Compare(other) == 1 || v.Compare(other) == 0
+}
+
+func (v Version) Equal(other Version) bool {
+	return v.Compare(other) == 0
+}
+
+func (v Version) Same(other Version) bool {
+	return v.Compare(other) == 0 && v.ThreadSafe == other.ThreadSafe
+}
