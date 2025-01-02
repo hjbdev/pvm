@@ -188,7 +188,7 @@ func Install(args []string) {
 	}
 
 	// install composer
-	composerPath := filepath.Join(phpPath, "composer.phar")
+	composerPath := filepath.Join(phpPath, "composer", "composer.phar")
 	composerUrl := "https://getcomposer.org/download/latest-stable/composer.phar"
 	if desiredVersion.LessThan(common.Version{Major: 7, Minor: 2}) {
 		composerUrl = "https://getcomposer.org/download/latest-2.2.x/composer.phar"

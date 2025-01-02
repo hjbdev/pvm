@@ -108,13 +108,13 @@ func Use(args []string) {
 		os.Remove(shPathCGI)
 	}
 
-	// remove old php bat script
+	// remove old composer bat script
 	batPathComposer := filepath.Join(binPath, "composer.bat")
 	if _, err := os.Stat(batPathComposer); err == nil {
 		os.Remove(batPathComposer)
 	}
 
-	// remove the old php sh script
+	// remove the old composer sh script
 	shPathComposer := filepath.Join(binPath, "composer")
 	if _, err := os.Stat(shPathComposer); err == nil {
 		os.Remove(shPathComposer)
@@ -178,7 +178,7 @@ func Use(args []string) {
 	batCommandComposer = batCommandComposer + "set arguments=%*\n"
 	batCommandComposer = batCommandComposer + "%filepath% %composerpath% %arguments%\n"
 
-	err = os.WriteFile(batPath, []byte(batCommandComposer), 0755)
+	err = os.WriteFile(batPathComposer, []byte(batCommandComposer), 0755)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -190,7 +190,7 @@ func Use(args []string) {
 	shCommandComposer = shCommandComposer + "composerpath=\"" + composerPath + "\"\n"
 	shCommandComposer = shCommandComposer + "\"$filepath\" \"$composerpath\" \"$@\""
 
-	err = os.WriteFile(shPath, []byte(shCommandComposer), 0755)
+	err = os.WriteFile(shPathComposer, []byte(shCommandComposer), 0755)
 
 	if err != nil {
 		log.Fatalln(err)
