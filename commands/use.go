@@ -63,7 +63,7 @@ func Use(args []string) {
 		if strings.Contains(version.Name(), "nts") || strings.Contains(version.Name(), "NTS") {
 			safe = false
 		}
-		foundVersion := common.GetVersion(version.Name(), safe, "")
+		foundVersion := common.ComputeVersion(version.Name(), safe, "")
 		if threadSafe == foundVersion.ThreadSafe && strings.HasPrefix(foundVersion.String(), args[0]) {
 			selectedVersion = &versionMeta{
 				number: foundVersion,
@@ -77,7 +77,7 @@ func Use(args []string) {
 		return
 	}
 
-	requestedVersion := common.GetVersion(args[0], threadSafe, "")
+	requestedVersion := common.ComputeVersion(args[0], threadSafe, "")
 	if requestedVersion.Minor == -1 {
 		theme.Warning(fmt.Sprintf("No minor version specified, assumed newest minor version %s.", selectedVersion.number.String()))
 	} else if requestedVersion.Patch == -1 {

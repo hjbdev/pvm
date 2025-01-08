@@ -17,6 +17,7 @@ func Help(notFoundError bool) {
 	fmt.Println("    help")
 	fmt.Println("    install")
 	fmt.Println("    list")
+	fmt.Println("    list-remote")
 	fmt.Println("    path")
 	fmt.Println("    use")
 }
