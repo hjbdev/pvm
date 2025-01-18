@@ -108,9 +108,22 @@ func Use(args []string) {
 		os.Remove(shPathCGI)
 	}
 
+	// remove old composer bat script
+	batPathComposer := filepath.Join(binPath, "composer.bat")
+	if _, err := os.Stat(batPathComposer); err == nil {
+		os.Remove(batPathComposer)
+	}
+
+	// remove the old composer sh script
+	shPathComposer := filepath.Join(binPath, "composer")
+	if _, err := os.Stat(shPathComposer); err == nil {
+		os.Remove(shPathComposer)
+	}
+
 	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name())
 	versionPath := filepath.Join(versionFolderPath, "php.exe")
 	versionPathCGI := filepath.Join(versionFolderPath, "php-cgi.exe")
+	composerPath := filepath.Join(versionFolderPath, "composer", "composer.phar")
 	envPHPFolder := "PHP_FOLDER=" + versionFolderPath
 
 	// create bat script for php
@@ -156,6 +169,31 @@ func Use(args []string) {
 	shCommandCGI += envPHPFolder + " \"$filepath\" \"$@\""
 
 	err = os.WriteFile(shPathCGI, []byte(shCommandCGI), 0755)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// create bat script for composer
+	batCommandComposer := "@echo off \n"
+	batCommandComposer = batCommandComposer + "set filepath=\"" + versionPath + "\"\n"
+	batCommandComposer = batCommandComposer + "set composerpath=\"" + composerPath + "\"\n"
+	batCommandComposer = batCommandComposer + "set arguments=%*\n"
+	batCommandComposer = batCommandComposer + "%filepath% %composerpath% %arguments%\n"
+
+	err = os.WriteFile(batPathComposer, []byte(batCommandComposer), 0755)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// create sh script for php
+	shCommandComposer := "#!/bin/bash\n"
+	shCommandComposer = shCommandComposer + "filepath=\"" + versionPath + "\"\n"
+	shCommandComposer = shCommandComposer + "composerpath=\"" + composerPath + "\"\n"
+	shCommandComposer = shCommandComposer + "\"$filepath\" \"$composerpath\" \"$@\""
+
+	err = os.WriteFile(shPathComposer, []byte(shCommandComposer), 0755)
 
 	if err != nil {
 		log.Fatalln(err)

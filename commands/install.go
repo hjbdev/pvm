@@ -143,62 +143,65 @@ func Install(args []string) {
 	}
 
 	// check if .pvm folder exists
-	if _, err := os.Stat(homeDir + "/.pvm"); os.IsNotExist(err) {
+	pvmPath := filepath.Join(homeDir, ".pvm")
+	if _, err := os.Stat(pvmPath); os.IsNotExist(err) {
 		theme.Info("Creating .pvm folder in home directory")
-		os.Mkdir(homeDir+"/.pvm", 0755)
+		os.Mkdir(pvmPath, 0755)
 	}
 
 	// check if .pvm/versions folder exists
-	if _, err := os.Stat(homeDir + "/.pvm/versions"); os.IsNotExist(err) {
+	versionsPath := filepath.Join(pvmPath, "versions")
+	if _, err := os.Stat(versionsPath); os.IsNotExist(err) {
 		theme.Info("Creating .pvm/versions folder in home directory")
-		os.Mkdir(homeDir+"/.pvm/versions", 0755)
+		os.Mkdir(versionsPath, 0755)
 	}
 
 	theme.Info("Downloading")
 
-	// Get the data
-	downloadResponse, err := http.Get("https://windows.php.net" + desiredVersion.Url)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	defer downloadResponse.Body.Close()
-
 	// zip filename from url
+	zipUrl := "https://windows.php.net" + desiredVersion.Url
 	zipFileName := strings.Split(desiredVersion.Url, "/")[len(strings.Split(desiredVersion.Url, "/"))-1]
+	zipPath := filepath.Join(versionsPath, zipFileName)
 
 	// check if zip already exists
-	if _, err := os.Stat(homeDir + "/.pvm/versions/" + zipFileName); err == nil {
+	if _, err := os.Stat(zipPath); err == nil {
 		theme.Error(fmt.Sprintf("PHP %s already exists", desiredVersion))
 		return
 	}
 
-	// Create the file
-	out, err := os.Create(homeDir + "/.pvm/versions/" + zipFileName)
-	if err != nil {
-		log.Fatalln(err)
+	// Get the data
+	if _, err := downloadFile(zipUrl, zipPath); err != nil {
+		log.Fatalf("Error while downloading PHP from %v: %v!", zipUrl, err)
 	}
-
-	// Write the body to file
-	_, err = io.Copy(out, downloadResponse.Body)
-
-	if err != nil {
-		out.Close()
-		log.Fatalln(err)
-	}
-
-	// Close the file
-	out.Close()
 
 	// extract the zip file to a folder
+	phpFolder := strings.Replace(zipFileName, ".zip", "", -1)
+	phpPath := filepath.Join(versionsPath, phpFolder)
 	theme.Info("Unzipping")
-	Unzip(homeDir+"/.pvm/versions/"+zipFileName, homeDir+"/.pvm/versions/"+strings.Replace(zipFileName, ".zip", "", -1))
+	Unzip(zipPath, phpPath)
 
 	// remove the zip file
 	theme.Info("Cleaning up")
-	err = os.Remove(homeDir + "/.pvm/versions/" + zipFileName)
+	err = os.Remove(zipPath)
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	// install composer
+	composerFolderPath := filepath.Join(phpPath, "composer")
+	if _, err := os.Stat(composerFolderPath); os.IsNotExist(err) {
+		theme.Info("Creating composer folder")
+		os.Mkdir(composerFolderPath, 0755)
+	}
+
+	composerPath := filepath.Join(composerFolderPath, "composer.phar")
+	composerUrl := "https://getcomposer.org/download/latest-stable/composer.phar"
+	if desiredVersion.LessThan(common.Version{Major: 7, Minor: 2}) {
+		composerUrl = "https://getcomposer.org/download/latest-2.2.x/composer.phar"
+	}
+
+	if _, err := downloadFile(composerUrl, composerPath); err != nil {
+		log.Fatalf("Error while downloading Composer from %v: %v!", composerUrl, err)
 	}
 
 	theme.Success(fmt.Sprintf("Finished installing PHP %s", desiredVersion))
@@ -315,4 +318,31 @@ func FindLatestMinor(versions []common.Version, major int, threadSafe bool) comm
 	}
 
 	return latestMinor
+}
+
+func downloadFile(fileUrl string, filePath string) (bool, error) {
+	downloadResponse, err := http.Get(fileUrl)
+	if err != nil {
+		return false, err
+	}
+
+	defer downloadResponse.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filePath)
+	if err != nil {
+		return false, err
+	}
+
+	// Write the body to file
+	_, err = io.Copy(out, downloadResponse.Body)
+
+	if err != nil {
+		out.Close()
+		return false, err
+	}
+
+	// Close the file
+	out.Close()
+	return true, nil
 }
