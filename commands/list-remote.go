@@ -26,6 +26,6 @@ func ListRemote() {
 		if idx != -1 {
 			found = "*"
 		}
-		color.White(found + "   v" + version.StringShort())
+		color.White(found + "   " + version.StringShort())
 	}
 }

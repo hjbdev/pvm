@@ -42,9 +42,17 @@ pvm install 8.2
 
 Will install PHP 8.2 at the latest patch.
 
-## Build
+## Composer support
+`pvm` now installs also composer with each php version installed.
+It will install Composer latest stable release for PHP >= 7.2 and Composer latest 2.2.x LTS for PHP < 7.2.
+You'll be able to invoke composer from terminal as it is intended:
+```shell
+composer --version
+```
 
-To compile the program use:
+## Build this project
+
+To compile this project use:
 ```shell
 GOOS=windows GOARCH=amd64 go build -o pvm.exe
 ```

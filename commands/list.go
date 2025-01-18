@@ -16,6 +16,6 @@ func List() {
 	theme.Title("Installed PHP versions")
 	// print all folders
 	for _, version := range versions {
-		color.White("    v" + version.StringShort())
+		color.White("    " + version.StringShort())
 	}
 }
