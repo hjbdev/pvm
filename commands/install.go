@@ -190,7 +190,7 @@ func Install(args []string) {
 	// install composer
 	composerFolderPath := filepath.Join(phpPath, "composer")
 	if _, err := os.Stat(composerFolderPath); os.IsNotExist(err) {
-		theme.Info("Creating .pvm/versions folder in home directory")
+		theme.Info("Creating composer folder")
 		os.Mkdir(composerFolderPath, 0755)
 	}
 
