@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -40,7 +39,7 @@ func Install(args []string) {
 		theme.Warning("Non-thread safe version will be installed")
 	}
 
-	desiredVersionNumbers := common.GetVersion(args[1], desireThreadSafe, "")
+	desiredVersionNumbers := common.ComputeVersion(args[1], desireThreadSafe, "")
 
 	if desiredVersionNumbers == (common.Version{}) {
 		theme.Error("Invalid version specified")
@@ -52,66 +51,9 @@ func Install(args []string) {
 	desiredMinorVersion := desiredVersionNumbers.Minor
 	desiredPatchVersion := desiredVersionNumbers.Patch
 
-	// perform get request to https://windows.php.net/downloads/releases/archives/
-	resp, err := http.Get("https://windows.php.net/downloads/releases/archives/")
+	versions, err := common.RetrievePHPVersions()
 	if err != nil {
 		log.Fatalln(err)
-	}
-	// We Read the response body on the line below.
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// Convert the body to type string
-	sb := string(body)
-
-	// regex match
-	re := regexp.MustCompile(`<A HREF="([a-zA-Z0-9./-]+)">([a-zA-Z0-9./-]+)</A>`)
-	matches := re.FindAllStringSubmatch(sb, -1)
-
-	versions := make([]common.Version, 0)
-
-	for _, match := range matches {
-		url := match[1]
-		name := match[2]
-
-		// check if name starts with "php-devel-pack-"
-		if name != "" && len(name) > 15 && name[:15] == "php-devel-pack-" {
-			continue
-		}
-		// check if name starts with "php-debug-pack-"
-		if name != "" && len(name) > 15 && name[:15] == "php-debug-pack-" {
-			continue
-		}
-		// check if name starts with "php-test-pack-"
-		if name != "" && len(name) > 15 && name[:14] == "php-test-pack-" {
-			continue
-		}
-
-		// check if name contains "src"
-		if name != "" && strings.Contains(name, "src") {
-			continue
-		}
-
-		// check if name does not end in zip
-		if name != "" && !strings.HasSuffix(name, ".zip") {
-			continue
-		}
-
-		threadSafe := true
-
-		// check if name contains "nts" or "NTS"
-		if name != "" && (strings.Contains(name, "nts") || strings.Contains(name, "NTS")) {
-			threadSafe = false
-		}
-
-		// make sure we only get x64 versions
-		if name != "" && !strings.Contains(name, "x64") {
-			continue
-		}
-
-		// regex match name and push to versions
-		versions = append(versions, common.GetVersion(name, threadSafe, url))
 	}
 
 	// find desired version
