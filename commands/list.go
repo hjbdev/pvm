@@ -8,27 +8,33 @@ import (
 )
 
 func List() {
-	// get users home dir
-	homeDir, err := os.UserHomeDir()
+	// get current dir
+	currentDir, err := os.Executable()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	
+	fullDir := filepath.Dir(currentDir)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// check if .pvm folder exists
-	if _, err := os.Stat(homeDir + "/.pvm"); os.IsNotExist(err) {
+	if _, err := os.Stat(fullDir + "/.pvm"); os.IsNotExist(err) {
 		theme.Error("No PHP versions installed")
 		return
 	}
 
 	// check if .pvm/versions folder exists
-	if _, err := os.Stat(homeDir + "/.pvm/versions"); os.IsNotExist(err) {
+	if _, err := os.Stat(fullDir + "/.pvm/versions"); os.IsNotExist(err) {
 		theme.Error("No PHP versions installed")
 		return
 	}
 
 	// get all folders in .pvm/versions
-	versions, err := os.ReadDir(homeDir + "/.pvm/versions")
+	versions, err := os.ReadDir(fullDir + "/.pvm/versions")
 	if err != nil {
 		log.Fatalln(err)
 	}
