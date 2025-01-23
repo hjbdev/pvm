@@ -52,81 +52,87 @@ func Install(args []string) {
 	desiredMinorVersion := desiredVersionNumbers.Minor
 	desiredPatchVersion := desiredVersionNumbers.Patch
 
-	// perform get request to https://windows.php.net/downloads/releases/archives/
-	resp, err := http.Get("https://windows.php.net/downloads/releases/archives/")
-	if err != nil {
-		log.Fatalln(err)
+    func fetchAndProcess(url string) []Version {
+    	// Perform GET request
+    	resp, err := http.Get(url)
+    	if err != nil {
+    		log.Fatalln(err)
+    	}
+    	defer resp.Body.Close()
+    
+    	// Read response body
+    	body, err := io.ReadAll(resp.Body)
+    	if err != nil {
+    		log.Fatalln(err)
+    	}
+    
+    	// Convert body to string
+    	sb := string(body)
+    
+    	// Regex to match links
+    	re := regexp.MustCompile(`<A HREF="([a-zA-Z0-9./-]+)">([a-zA-Z0-9./-]+)</A>`)
+    	matches := re.FindAllStringSubmatch(sb, -1)
+    
+    	var versions []Version
+    
+        func shouldSkip(name string) bool {
+        	// Skip based on specific criteria
+        	return name == "" ||
+        		(len(name) > 15 && strings.HasPrefix(name, "php-devel-pack-")) ||
+        		(len(name) > 15 && strings.HasPrefix(name, "php-debug-pack-")) ||
+        		(len(name) > 14 && strings.HasPrefix(name, "php-test-pack-")) ||
+        		strings.Contains(name, "src") ||
+        		!strings.HasSuffix(name, ".zip") ||
+        		!strings.Contains(name, "x64")
+        }
+    
+    	for _, match := range matches {
+    		url := match[1]
+    		name := match[2]
+    
+    		// Apply filters
+    		if shouldSkip(name) {
+    			continue
+    		}
+    
+    		threadSafe := true
+    		if strings.Contains(name, "nts") || strings.Contains(name, "NTS") {
+    			threadSafe = false
+    		}
+    
+    		// Append the version after processing
+    		versions = append(versions, common.GetVersion(name, threadSafe, url))
+    	}
+    
+    	return versions
+    }
+    
+    urls := []string{
+		"https://windows.php.net/downloads/releases/archives/",
+		"https://windows.php.net/downloads/releases/",
 	}
-	// We Read the response body on the line below.
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// Convert the body to type string
-	sb := string(body)
 
-	// regex match
-	re := regexp.MustCompile(`<A HREF="([a-zA-Z0-9./-]+)">([a-zA-Z0-9./-]+)</A>`)
-	matches := re.FindAllStringSubmatch(sb, -1)
+	var allVersions []Version
 
-	versions := make([]common.Version, 0)
-
-	for _, match := range matches {
-		url := match[1]
-		name := match[2]
-
-		// check if name starts with "php-devel-pack-"
-		if name != "" && len(name) > 15 && name[:15] == "php-devel-pack-" {
-			continue
-		}
-		// check if name starts with "php-debug-pack-"
-		if name != "" && len(name) > 15 && name[:15] == "php-debug-pack-" {
-			continue
-		}
-		// check if name starts with "php-test-pack-"
-		if name != "" && len(name) > 15 && name[:14] == "php-test-pack-" {
-			continue
-		}
-
-		// check if name contains "src"
-		if name != "" && strings.Contains(name, "src") {
-			continue
-		}
-
-		// check if name does not end in zip
-		if name != "" && !strings.HasSuffix(name, ".zip") {
-			continue
-		}
-
-		threadSafe := true
-
-		// check if name contains "nts" or "NTS"
-		if name != "" && (strings.Contains(name, "nts") || strings.Contains(name, "NTS")) {
-			threadSafe = false
-		}
-
-		// make sure we only get x64 versions
-		if name != "" && !strings.Contains(name, "x64") {
-			continue
-		}
-
-		// regex match name and push to versions
-		versions = append(versions, common.GetVersion(name, threadSafe, url))
+	// Fetch and process each URL
+	for _, url := range urls {
+		versions := fetchAndProcess(url)
+		allVersions = append(allVersions, versions...)
 	}
 
 	// find desired version
 	var desiredVersion common.Version
 
 	if desiredMajorVersion > -1 && desiredMinorVersion > -1 && desiredPatchVersion > -1 {
-		desiredVersion = FindExactVersion(versions, desiredMajorVersion, desiredMinorVersion, desiredPatchVersion, desireThreadSafe)
+		desiredVersion = FindExactVersion(allVersions, desiredMajorVersion, desiredMinorVersion, desiredPatchVersion, desireThreadSafe)
 	}
 
 	if desiredMajorVersion > -1 && desiredMinorVersion > -1 && desiredPatchVersion == -1 {
-		desiredVersion = FindLatestPatch(versions, desiredMajorVersion, desiredMinorVersion, desireThreadSafe)
+		desiredVersion = FindLatestPatch(allVersions, desiredMajorVersion, desiredMinorVersion, desireThreadSafe)
 	}
 
 	if desiredMajorVersion > -1 && desiredMinorVersion == -1 && desiredPatchVersion == -1 {
-		desiredVersion = FindLatestMinor(versions, desiredMajorVersion, desireThreadSafe)
+		desiredVersion = FindLatestMinor(allVersions, desiredMajorVersion, desireThreadSafe)
 	}
 
 	if desiredVersion == (common.Version{}) {
@@ -136,14 +142,17 @@ func Install(args []string) {
 
 	fmt.Printf("Installing PHP %s\n", desiredVersion)
 
-	homeDir, err := os.UserHomeDir()
+	// get current dir
+	currentDir, err := os.Executable()
 
 	if err != nil {
 		log.Fatalln(err)
 	}
+	
+	fullDir := filepath.Dir(currentDir)
 
 	// check if .pvm folder exists
-	pvmPath := filepath.Join(homeDir, ".pvm")
+	pvmPath := filepath.Join(currentDir, ".pvm")
 	if _, err := os.Stat(pvmPath); os.IsNotExist(err) {
 		theme.Info("Creating .pvm folder in home directory")
 		os.Mkdir(pvmPath, 0755)
