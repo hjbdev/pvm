@@ -33,10 +33,10 @@ func main() {
 		commands.Help(false)
 	case "list":
 		commands.List()
-	case "path":
-		commands.Path()
 	case "install":
 		commands.Install(args)
+	case "uninstall":
+		commands.Uninstall(args)
 	case "use":
 		commands.Use(args[1:])
 	default:
