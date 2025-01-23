@@ -16,7 +16,7 @@ func Help(notFoundError bool) {
 	fmt.Println("Available Commands:")
 	fmt.Println("    help")
 	fmt.Println("    install")
+	fmt.Println("    uninstall")
 	fmt.Println("    list")
-	fmt.Println("    path")
 	fmt.Println("    use")
 }
