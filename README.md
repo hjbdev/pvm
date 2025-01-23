@@ -16,35 +16,44 @@ Download the latest pvm version from the releases page (1.0-alpha-1, it's curren
 Create the folder `%UserProfile%\.pvm\bin` (e.g. `C:\Users\Harry\.pvm\bin`) and drop the pvm exe in there. Add the folder to your PATH.
 
 ## Commands
+
 ```
 pvm list
 ```
+
 Will list out all the available PHP versions you have installed
 
 ```
-pvm path
+pvm install 8
 ```
-Will tell you what to put in your Path variable.
 
-```
-pvm use 8.2.9
-```
-> [!NOTE]  
-> Versions must have major.minor specified in the *use* command. If a .patch version is omitted, newest available patch version is chosen.
-
-Will switch your currently active PHP version to PHP 8.2.9
-
-```
-pvm install 8.2
-```
-> [!NOTE]  
+> [!NOTE]
 > The install command will automatically determine the newest minor/patch versions if they are not specified
 
-Will install PHP 8.2 at the latest patch.
+Will install PHP 8 at the latest minor and patch.
+
+```
+pvm use 8.2
+```
+
+> [!NOTE]
+> Versions must have major.minor specified in the *use* command. If a .patch version is omitted, newest available patch version is chosen.
+
+Will switch your currently active PHP version to PHP 8.2 latest patch.
+
+```
+pvm uninstall 8.2.9
+```
+
+> [!NOTE]
+> Versions must have major.minor.patch specified in the *uninstall* command. If a .patch version is omitted, it will not uninstalling.
+
+Will uninstall PHP version to PHP 8.2.9
 
 ## Build
 
 To compile the program use:
+
 ```shell
 GOOS=windows GOARCH=amd64 go build -o pvm.exe
 ```
