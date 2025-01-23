@@ -25,33 +25,35 @@ func Use(args []string) {
 		}
 	}
 
-	// get users home dir
-	homeDir, err := os.UserHomeDir()
+	// get current dir
+	currentDir, err := os.Executable()
 
 	if err != nil {
 		log.Fatalln(err)
 	}
+	
+	fullDir := filepath.Dir(currentDir)
 
 	// check if .pvm folder exists
-	if _, err := os.Stat(filepath.Join(homeDir, ".pvm")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(fullDir, ".pvm")); os.IsNotExist(err) {
 		theme.Error("No PHP versions installed")
 		return
 	}
 
 	// check if .pvm/versions folder exists
-	if _, err := os.Stat(filepath.Join(homeDir, ".pvm", "versions")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(fullDir, ".pvm", "versions")); os.IsNotExist(err) {
 		theme.Error("No PHP versions installed")
 		return
 	}
 
 	// check if .pvm/bin folder exists
-	binPath := filepath.Join(homeDir, ".pvm", "bin")
+	binPath := filepath.Join(fullDir, ".pvm", "bin")
 	if _, err := os.Stat(binPath); os.IsNotExist(err) {
 		os.Mkdir(binPath, 0755)
 	}
 
 	// get all folders in .pvm/versions
-	versions, err := os.ReadDir(filepath.Join(homeDir, ".pvm", "versions"))
+	versions, err := os.ReadDir(filepath.Join(fullDir, ".pvm", "versions"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -120,7 +122,7 @@ func Use(args []string) {
 		os.Remove(shPathComposer)
 	}
 
-	versionFolderPath := filepath.Join(homeDir, ".pvm", "versions", selectedVersion.folder.Name())
+	versionFolderPath := filepath.Join(fullDir, ".pvm", "versions", selectedVersion.folder.Name())
 	versionPath := filepath.Join(versionFolderPath, "php.exe")
 	versionPathCGI := filepath.Join(versionFolderPath, "php-cgi.exe")
 	composerPath := filepath.Join(versionFolderPath, "composer", "composer.phar")
