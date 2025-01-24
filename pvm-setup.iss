@@ -78,10 +78,44 @@ begin
   end;
 end;
 
+procedure RemovePath();
+begin
+  if RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', path) then
+  begin
+    // Remove the app directory and bin directory from the PATH
+    StringChangeEx(path, ExpandConstant('{app}') + ';', '', True);
+    StringChangeEx(path, ExpandConstant('{app}') + '\bin' + ';', '', True);
+
+    // Remove extra semicolons (e.g., ;; becomes ; or ;;; becomes ;)
+    StringChangeEx(path, ';;', ';', True);
+
+    // Remove any leading semicolon at the start of the path if present
+    if (Pos(';', path) = 1) then
+      path := Copy(path, 2, Length(path) - 1);
+
+    // Ensure there's no trailing semicolon at the end of the path
+    if (Pos(';', path) = Length(path)) then
+      path := Copy(path, 1, Length(path) - 1);
+
+    // Write the cleaned path back to the registry
+    RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', path);
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
     InitializePath();
+  end
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    RemovePath();
   end;
 end;
+
+
