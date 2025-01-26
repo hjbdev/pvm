@@ -64,11 +64,25 @@ begin
   begin
     if Pos(ExpandConstant('{app}'), path) = 0 then
     begin
+      // Check if PATH is empty
       if path <> '' then
         path := path + ';';
         
+      // Add the app directory and bin directory to the PATH  
       path := path + ExpandConstant('{app}') + ';' + ExpandConstant('{app}') + '\bin';
+      
+      // Remove extra semicolons (e.g., ;; becomes ; or ;;; becomes ;)
       StringChangeEx(path, ';;', ';', True);
+
+      // Remove any leading semicolon at the start of the path if present
+      if (Pos(';', path) = 1) then
+        path := Copy(path, 2, Length(path) - 1);
+
+      // Ensure there's no trailing semicolon at the end of the path
+      if (Pos(';', path) = Length(path)) then
+        path := Copy(path, 1, Length(path) - 1);
+      
+      // Write the added path back to the registry
       RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', path);
     end;
   end
@@ -99,6 +113,10 @@ begin
 
     // Write the cleaned path back to the registry
     RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', path);
+  end
+  else
+  begin
+    MsgBox('Unable to read PATH environment variable.', mbError, MB_OK);
   end;
 end;
 
