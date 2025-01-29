@@ -14,53 +14,40 @@ import (
 )
 
 func Install(args []string) {
-	if len(args) < 1 {
-		theme.Error("You must specify a version to install.")
-		return
-	}
-
 	desireThreadSafe := true
 	installPath := "" // This will store the install path
+	var requestedVersion string
 
-	// Check for "nts" flag or installation path
+	if len(args) > 0 {
+		requestedVersion = args[0]
+	} else {
+		requestedVersion = ""
+		theme.Warning("Latest version will be installed")
+	}
+
 	if len(args) > 1 {
-		if args[1] == "nts" {
-			desireThreadSafe = false
-		} else {
-			// If it's not "nts", consider it as the installation path
-			installPath = args[1]
-		}
-	}
-	if len(args) > 2 {
-		if args[2] == "nts" {
-			desireThreadSafe = false
-		} else {
-			// If it's not "nts", consider it as the installation path
-			installPath = args[2]
+		// Process additional arguments (install path or "nts" flag)
+		for _, arg := range args[1:] {
+			if arg == "nts" {
+				desireThreadSafe = false
+			} else {
+				installPath = arg
+			}
 		}
 	}
 
+	// Print the selected thread safety mode
 	var threadSafeString string
 	if desireThreadSafe {
 		threadSafeString = "thread safe"
-	} else {
-		threadSafeString = "non-thread safe"
-	}
-
-	if desireThreadSafe {
 		theme.Warning("Thread safe version will be installed")
 	} else {
+		threadSafeString = "non-thread safe"
 		theme.Warning("Non-thread safe version will be installed")
 	}
 
-	desiredVersionNumbers := common.ComputeVersion(args[0], desireThreadSafe, "")
-
-	if desiredVersionNumbers == (common.Version{}) {
-		theme.Error("Invalid version specified")
-		return
-	}
-
-	// Get the desired version from the user input
+	desiredVersionNumbers := common.ComputeVersion(requestedVersion, desireThreadSafe, "")
+	// Get the desired version components
 	desiredMajorVersion := desiredVersionNumbers.Major
 	desiredMinorVersion := desiredVersionNumbers.Minor
 	desiredPatchVersion := desiredVersionNumbers.Patch
@@ -77,22 +64,10 @@ func Install(args []string) {
 	versions := append(latestVersions, archivesVersions...)
 
 	// find desired version
-	var desiredVersion common.Version
-
-	if desiredMajorVersion > -1 && desiredMinorVersion > -1 && desiredPatchVersion > -1 {
-		desiredVersion = FindExactVersion(versions, desiredMajorVersion, desiredMinorVersion, desiredPatchVersion, desireThreadSafe)
-	}
-
-	if desiredMajorVersion > -1 && desiredMinorVersion > -1 && desiredPatchVersion == -1 {
-		desiredVersion = FindLatestPatch(versions, desiredMajorVersion, desiredMinorVersion, desireThreadSafe)
-	}
-
-	if desiredMajorVersion > -1 && desiredMinorVersion == -1 && desiredPatchVersion == -1 {
-		desiredVersion = FindLatestMinor(versions, desiredMajorVersion, desireThreadSafe)
-	}
+	desiredVersion := FindVersion(versions, desiredMajorVersion, desiredMinorVersion, desiredPatchVersion, desireThreadSafe)
 
 	if desiredVersion == (common.Version{}) {
-		theme.Error(fmt.Sprintf("Could not find the desired version: %s %s", args[0], threadSafeString))
+		theme.Error(fmt.Sprintf("Could not find the desired version: %s %s", requestedVersion, threadSafeString))
 		return
 	}
 
@@ -242,53 +217,63 @@ func Unzip(src, dest string) error {
 	return nil
 }
 
-func FindExactVersion(versions []common.Version, major int, minor int, patch int, threadSafe bool) common.Version {
-	for _, version := range versions {
-		if version.ThreadSafe != threadSafe {
-			continue
+func FindVersion(versions []common.Version, major, minor, patch int, threadSafe bool) common.Version {
+	var latestMajor, latestMinor, latestPatch int = -1, -1, -1
+
+	// Case 1: All are -1 → Find the latest available version (highest major, minor, patch)
+	if major == -1 && minor == -1 && patch == -1 {
+		for _, version := range versions {
+			if version.ThreadSafe != threadSafe {
+				continue
+			}
+			if version.Major > latestMajor ||
+				(version.Major == latestMajor && version.Minor > latestMinor) ||
+				(version.Major == latestMajor && version.Minor == latestMinor && version.Patch > latestPatch) {
+				latestMajor, latestMinor, latestPatch = version.Major, version.Minor, version.Patch
+			}
 		}
-		if version.Major == major && version.Minor == minor && version.Patch == patch {
+		major, minor, patch = latestMajor, latestMinor, latestPatch
+	}
+
+	// Case 2: Minor and Patch are -1 → Find the latest minor and patch for the given major
+	if minor == -1 && patch == -1 {
+		for _, version := range versions {
+			if version.ThreadSafe != threadSafe || version.Major != major {
+				continue
+			}
+			if version.Minor > latestMinor ||
+				(version.Minor == latestMinor && version.Patch > latestPatch) {
+				latestMinor, latestPatch = version.Minor, version.Patch
+			}
+		}
+		minor, patch = latestMinor, latestPatch
+	}
+
+	// Case 3: Patch is -1 → Find the latest patch for the given major and minor
+	if patch == -1 {
+		for _, version := range versions {
+			if version.ThreadSafe != threadSafe || version.Major != major || version.Minor != minor {
+				continue
+			}
+			if version.Patch > latestPatch {
+				latestPatch = version.Patch
+			}
+		}
+		patch = latestPatch
+	}
+
+	// Case 4: All values are provided → Look for an exact match
+	for _, version := range versions {
+		if version.ThreadSafe == threadSafe &&
+			version.Major == major &&
+			version.Minor == minor &&
+			version.Patch == patch {
 			return version
 		}
 	}
 
+	// No matching version found
 	return common.Version{}
-}
-
-func FindLatestPatch(versions []common.Version, major int, minor int, threadSafe bool) common.Version {
-	latestPatch := common.Version{}
-
-	for _, version := range versions {
-		if version.ThreadSafe != threadSafe {
-			continue
-		}
-		if version.Major == major && version.Minor == minor {
-			if latestPatch.Patch == -1 || version.Patch > latestPatch.Patch {
-				latestPatch = version
-			}
-		}
-	}
-
-	return latestPatch
-}
-
-func FindLatestMinor(versions []common.Version, major int, threadSafe bool) common.Version {
-	latestMinor := common.Version{}
-
-	for _, version := range versions {
-		if version.ThreadSafe != threadSafe {
-			continue
-		}
-		if version.Major == major {
-			if latestMinor.Minor == -1 || version.Minor > latestMinor.Minor {
-				if latestMinor.Patch == -1 || version.Patch > latestMinor.Patch {
-					latestMinor = version
-				}
-			}
-		}
-	}
-
-	return latestMinor
 }
 
 func downloadFile(fileUrl string, filePath string) (bool, error) {

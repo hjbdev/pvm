@@ -56,7 +56,13 @@ func ComputeVersion(text string, safe bool, url string) Version {
 	versionRe := regexp.MustCompile(`([0-9]{1,3})(?:.([0-9]{1,3}))?(?:.([0-9]{1,3}))?`)
 	matches := versionRe.FindAllStringSubmatch(text, -1)
 	if len(matches) == 0 {
-		return Version{}
+		return Version{
+			Major:      -1,
+			Minor:      -1,
+			Patch:      -1,
+			ThreadSafe: safe,
+			Url:        url,
+		}
 	}
 
 	major, err := strconv.Atoi(matches[0][1])
