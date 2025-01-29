@@ -131,10 +131,9 @@ func Use(args []string) {
 		os.Remove(shPathComposer)
 	}
 
-	versionFolderPath := filepath.Join(fullDir, "versions", selectedVersion.Folder)
-	versionPath := filepath.Join(versionFolderPath, "php.exe")
-	versionPathCGI := filepath.Join(versionFolderPath, "php-cgi.exe")
-	composerPath := filepath.Join(versionFolderPath, "composer", "composer.phar")
+	versionPath := filepath.Join(selectedVersion.Folder, "php.exe")
+	versionPathCGI := filepath.Join(selectedVersion.Folder, "php-cgi.exe")
+	composerPath := filepath.Join(selectedVersion.Folder, "composer", "composer.phar")
 
 	// create bat script for php
 	batCommand := "@echo off \n"
@@ -208,7 +207,7 @@ func Use(args []string) {
 	}
 
 	// create directory link to ext directory
-	extensionDirPath := filepath.Join(versionFolderPath, "ext")
+	extensionDirPath := filepath.Join(selectedVersion.Folder, "ext")
 	extensionLinkPath := filepath.Join(binPath, "ext")
 
 	// delete the old link first if it exists
