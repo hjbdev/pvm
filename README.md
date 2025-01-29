@@ -11,38 +11,53 @@ This utility changes that.
 
 ## Installation
 
-Download the latest pvm version from the releases page (1.0-alpha-1, it's currently a pre-release).
+> [!WARNING]
+> version lower than 1.3.0 will have only pvm.exe
+> version 1.3.0 or higher will include pvm-setup.exe but can still get pvm.exe from source
 
-Create the folder `%UserProfile%\.pvm\bin` (e.g. `C:\Users\Harry\.pvm\bin`) and drop the pvm exe in there. Add the folder to your PATH.
+### Installer
+> Download the latest pvm installer from the releases page (>= 1.3.0).
+
+### Manual Installation
+> Create the folder `%UserProfile%\.pvm\bin` (e.g. `C:\Users\Harry\.pvm\bin`) and drop the pvm.exe in there. Add the folder to your PATH.
 
 ## Commands
+
 ```
 pvm list
 ```
+
 Will list out all the available PHP versions you have installed
 
 ```
-pvm path
+pvm install 8
 ```
-Will tell you what to put in your Path variable.
 
-```
-pvm use 8.2.9
-```
-> [!NOTE]  
-> Versions must have major.minor specified in the *use* command. If a .patch version is omitted, newest available patch version is chosen.
-
-Will switch your currently active PHP version to PHP 8.2.9
-
-```
-pvm install 8.2
-```
-> [!NOTE]  
+> [!NOTE]
 > The install command will automatically determine the newest minor/patch versions if they are not specified
 
-Will install PHP 8.2 at the latest patch.
+Will install PHP 8 at the latest minor and patch.
+
+```
+pvm use 8.2
+```
+
+> [!NOTE]
+> Versions must have major.minor specified in the *use* command. If a .patch version is omitted, newest available patch version is chosen.
+
+Will switch your currently active PHP version to PHP 8.2 latest patch.
+
+```
+pvm uninstall 8.2.9
+```
+
+> [!NOTE]
+> Versions must have major.minor.patch specified in the *uninstall* command. If a .patch version is omitted, it will not uninstalling.
+
+Will uninstall PHP version to PHP 8.2.9
 
 ## Composer support
+
 `pvm` now installs also composer with each php version installed.
 It will install Composer latest stable release for PHP >= 7.2 and Composer latest 2.2.x LTS for PHP < 7.2.
 You'll be able to invoke composer from terminal as it is intended:
@@ -53,6 +68,7 @@ composer --version
 ## Build this project
 
 To compile this project use:
+
 ```shell
 GOOS=windows GOARCH=amd64 go build -o pvm.exe
 ```
