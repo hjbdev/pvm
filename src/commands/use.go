@@ -216,7 +216,7 @@ func Use(args []string) {
 	var output []byte
 
 	composerLinkPath := filepath.Join(binPath, "composer.phar")
-	cmd = exec.Command("cmd", "/C", "mklink", "/J", composerLinkPath, composerPath)
+	cmd = exec.Command("cmd", "/C", "mklink", "/H", composerLinkPath, composerPath)
 
 	output, err = cmd.Output()
 	if err != nil {
