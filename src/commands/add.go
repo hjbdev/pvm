@@ -49,7 +49,7 @@ func Add(args []string) {
 	}
 
 	// Add to versions.json
-	common.AddToVersionsJson(phpPath, matches[1]+threadSafe, "external")
+	common.AddToVersionsJson(addPath, matches[1]+threadSafe, "external")
 
-	theme.Success(fmt.Sprintf("Finished add PHP %s", phpPath))
+	theme.Success(fmt.Sprintf("Finished add PHP %s", addPath))
 }
