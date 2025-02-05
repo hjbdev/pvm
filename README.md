@@ -52,10 +52,11 @@ pvm use <version|path>
 -   Using a path: Specify the path to the PHP executable to set it as the active PHP version.
 
 ```
-pvm uninstall 8.2.9
+pvm uninstall <version>
 ```
 - __Will uninstall specified PHP vesrion.__
 - The `uninstall` command requires the full `major.minor.patch` version to be specified.
+- This command can uninstall only php installed by pvm.
 
 ```
 pvm add <path>
