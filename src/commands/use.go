@@ -131,12 +131,6 @@ func Use(args []string) {
 		os.Remove(shPathComposer)
 	}
 
-	// remove the old composer link
-	linkPathComposer := filepath.Join(binPath, "composer.phar")
-	if _, err := os.Stat(linkPathComposer); err == nil {
-		os.Remove(linkPathComposer)
-	}
-
 	versionPath := filepath.Join(selectedVersion.Folder, "php.exe")
 	versionPathCGI := filepath.Join(selectedVersion.Folder, "php-cgi.exe")
 	composerPath := filepath.Join(selectedVersion.Folder, "composer", "composer.phar")
@@ -212,20 +206,6 @@ func Use(args []string) {
 		theme.Error(fmt.Sprintln(err))
 	}
 
-	var cmd *exec.Cmd
-	var output []byte
-
-	composerLinkPath := filepath.Join(binPath, "composer.phar")
-	cmd = exec.Command("cmd", "/C", "mklink", "/H", composerLinkPath, composerPath)
-
-	output, err = cmd.Output()
-	if err != nil {
-		theme.Error(fmt.Sprintln("Error creating composer.phar symlink: %v", err))
-		return
-	} else {
-		theme.Info(string(output))
-	}
-
 	// create directory link to ext directory
 	extensionDirPath := filepath.Join(selectedVersion.Folder, "ext")
 	extensionLinkPath := filepath.Join(binPath, "ext")
@@ -241,9 +221,9 @@ func Use(args []string) {
 	}
 
 	// create directory link - uses cmd since using os.Symlink did require extra permissions
-	cmd = exec.Command("cmd", "/C", "mklink", "/J", extensionLinkPath, extensionDirPath)
+	cmd := exec.Command("cmd", "/C", "mklink", "/J", extensionLinkPath, extensionDirPath)
 
-	output, err = cmd.Output()
+	output, err := cmd.Output()
 	if err != nil {
 		theme.Error(fmt.Sprintln("Error creating ext directory symlink: %v", err))
 		return
