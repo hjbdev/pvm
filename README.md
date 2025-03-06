@@ -1,5 +1,7 @@
 # PVM for Windows
 
+[Support this project](https://github.com/sponsors/hjbdev)
+
 > [!TIP]
 > Looking for the 0.x (composer) version? See the [v0 branch](https://github.com/hjbdev/pvm/tree/v0).
 
