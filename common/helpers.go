@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,6 +25,9 @@ type Version struct {
 }
 
 func (v Version) Semantic() string {
+	if v.Patch == -1 {
+		return fmt.Sprintf("%v.%v", v.Major, v.Minor)
+	}
 	return fmt.Sprintf("%v.%v.%v", v.Major, v.Minor, v.Patch)
 }
 
@@ -61,7 +66,7 @@ func ComputeVersion(text string, safe bool, url string) Version {
 
 	patch, err := strconv.Atoi(matches[0][3])
 	if err != nil {
-		patch = -1
+		patch = -1 // Default patch to -1 if not present
 	}
 
 	return Version{
@@ -139,6 +144,83 @@ func SortVersions(input []Version) []Version {
 }
 
 func RetrievePHPVersions() ([]Version, error) {
+	if runtime.GOOS == "darwin" {
+		return retrieveMacPHPVersions()
+	}
+	return retrieveWindowsPHPVersions()
+}
+
+func retrieveMacPHPVersions() ([]Version, error) {
+	// Search in both homebrew/core and shivammathur/php
+	cmd1 := exec.Command("brew", "search", "--formulae", "php")
+	out1, err1 := cmd1.CombinedOutput()
+	// It's okay if one of them fails (e.g. tap not installed), as long as we get some versions.
+	if err1 != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to search homebrew/core for php versions: %v\n", err1)
+	}
+
+	cmd2 := exec.Command("brew", "search", "--formulae", "shivammathur/php/php")
+	out2, err2 := cmd2.CombinedOutput()
+	if err2 != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to search shivammathur/php for php versions: %v\n", err2)
+	}
+
+	if err1 != nil && err2 != nil {
+		return nil, fmt.Errorf("failed to execute 'brew search' in both homebrew/core and shivammathur/php")
+	}
+
+	output := string(out1) + "\n" + string(out2)
+	lines := strings.Split(output, "\n")
+	versions := make([]Version, 0)
+	seen := make(map[string]bool)
+
+	// Matches php@8.1, shivammathur/php/php@8.1 and extracts the version number
+	re := regexp.MustCompile(`php@(\d+\.\d+)`)
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		// We only care about formulae, which are not surrounded by {}
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "{") {
+			continue
+		}
+
+		matches := re.FindStringSubmatch(trimmedLine)
+		var versionString string
+		if len(matches) > 1 {
+			versionString = matches[1]
+		} else if strings.HasSuffix(trimmedLine, "php") {
+			// Handle the case for unversioned formulae like "php" or "shivammathur/php/php", which point to the latest version.
+			infoCmd := exec.Command("brew", "info", trimmedLine, "--json=v1")
+			infoOut, infoErr := infoCmd.Output()
+			if infoErr == nil {
+				// A bit of a hacky json parse to find the version
+				jsonRe := regexp.MustCompile(`"version"\s*:\s*"([0-9.]+)"`)
+				jsonMatches := jsonRe.FindStringSubmatch(string(infoOut))
+				if len(jsonMatches) > 1 {
+					fullVersion := jsonMatches[1]
+					parts := strings.Split(fullVersion, ".")
+					if len(parts) >= 2 {
+						versionString = fmt.Sprintf("%s.%s", parts[0], parts[1])
+					}
+				}
+			}
+			if versionString == "" {
+				continue // could not determine version
+			}
+		} else {
+			continue
+		}
+
+		if _, exists := seen[versionString]; !exists {
+			versions = append(versions, ComputeVersion(versionString, true, ""))
+			seen[versionString] = true
+		}
+	}
+
+	return versions, nil
+}
+
+func retrieveWindowsPHPVersions() ([]Version, error) {
 	// perform get request to https://windows.php.net/downloads/releases/archives/
 	resp, err := http.Get("https://windows.php.net/downloads/releases/archives/")
 	if err != nil {
