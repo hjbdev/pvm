@@ -8,17 +8,101 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
 func Use(args []string) {
-	threadSafe := true
-
 	if len(args) < 1 {
 		theme.Error("You must specify a version to use.")
 		return
 	}
 
+	if runtime.GOOS == "darwin" {
+		useForMac(args)
+	} else if runtime.GOOS == "windows" {
+		useForWindows(args)
+	} else {
+		theme.Error(fmt.Sprintf("Unsupported operating system: %s", runtime.GOOS))
+	}
+}
+
+func useForMac(args []string) {
+	version := args[0]
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("Could not get user's home directory: %v", err)
+	}
+
+	pvmPath := filepath.Join(homeDir, ".pvm")
+	versionsPath := filepath.Join(pvmPath, "versions")
+	versionPath := filepath.Join(versionsPath, version)
+
+	// Check if the version is installed
+	if _, err := os.Stat(versionPath); os.IsNotExist(err) {
+		theme.Error(fmt.Sprintf("PHP %s is not installed. Run 'pvm install %s' to install it.", version, version))
+		return
+	}
+
+	// Symlink logic
+	currentLinkPath := filepath.Join(pvmPath, "current")
+
+	// Remove existing symlink
+	if _, err := os.Lstat(currentLinkPath); err == nil {
+		if err := os.Remove(currentLinkPath); err != nil {
+			log.Fatalf("Failed to remove existing 'current' symlink: %v", err)
+		}
+	}
+
+	// Create new symlink
+	if err := os.Symlink(versionPath, currentLinkPath); err != nil {
+		log.Fatalf("Failed to create 'current' symlink for %s: %v", version, err)
+	}
+
+	// Check shell config for PATH
+	shell_config := os.Getenv("SHELL")
+	if shell_config == "" {
+		shell_config = "bash" // default
+	}
+
+	var shellrc string
+	if strings.Contains(shell_config, "zsh") {
+		shellrc = filepath.Join(homeDir, ".zshrc")
+	} else if strings.Contains(shell_config, "bash") {
+		shellrc = filepath.Join(homeDir, ".bashrc")
+	} else {
+		theme.Warning(fmt.Sprintf("Could not detect shell config for %s. Please add ~/.pvm/current to your PATH manually.", shell_config))
+		return
+	}
+
+	path_to_add := "export PATH=\"$HOME/.pvm/current:$PATH\""
+	content, err := os.ReadFile(shellrc)
+	if err != nil {
+		// If the file doesn't exist, we can't check it.
+		// We'll just print the message.
+		theme.Warning(fmt.Sprintf("Could not read %s. Please add the following line to your shell configuration file:", shellrc))
+		fmt.Println(path_to_add)
+		theme.Success(fmt.Sprintf("Now using PHP %s", version))
+		return
+	}
+
+	if !strings.Contains(string(content), "$HOME/.pvm/current") {
+		theme.Warning("To finish setting up pvm, please add the following line to your shell configuration file:")
+		fmt.Printf("  %s\n", path_to_add)
+
+		theme.Info("You can do this automatically by running:")
+
+		fmt.Printf("  echo '%s' | sudo tee -a %s > /dev/null && source %s\n", path_to_add, shellrc, shellrc)
+
+		theme.Info("This will append the configuration with sudo and apply it immediately.")
+		return
+	}
+
+	theme.Success(fmt.Sprintf("Now using PHP %s", version))
+}
+
+func useForWindows(args []string) {
+	threadSafe := true
 	if len(args) > 1 {
 		if args[1] == "nts" {
 			threadSafe = false
@@ -27,7 +111,6 @@ func Use(args []string) {
 
 	// get users home dir
 	homeDir, err := os.UserHomeDir()
-
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -154,7 +237,7 @@ func Use(args []string) {
 	batCommandCGI = batCommandCGI + "set arguments=%*\n"
 	batCommandCGI = batCommandCGI + "%filepath% %arguments%\n"
 
-	err = os.WriteFile(batPathCGI, []byte(batCommandCGI), 0755)
+	err = os.WriteFile(batPath, []byte(batCommandCGI), 0755)
 
 	if err != nil {
 		log.Fatalln(err)

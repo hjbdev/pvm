@@ -20,4 +20,5 @@ func Help(notFoundError bool) {
 	fmt.Println("    list-remote")
 	fmt.Println("    path")
 	fmt.Println("    use")
+	fmt.Println("    uninstall")
 }

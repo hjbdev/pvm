@@ -9,7 +9,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -19,6 +21,129 @@ func Install(args []string) {
 		return
 	}
 
+	version := args[1]
+
+	pvmPath, versionsPath, err := setupDirectories()
+	if err != nil {
+		log.Fatalf("Failed to set up directories: %v", err)
+	}
+
+	// check if version is already installed
+	versionPath := filepath.Join(versionsPath, version)
+	if _, err := os.Stat(versionPath); err == nil {
+		theme.Error(fmt.Sprintf("PHP %s is already installed.", version))
+		return
+	}
+
+	if runtime.GOOS == "darwin" {
+		installForMac(version, pvmPath, versionsPath)
+	} else if runtime.GOOS == "windows" {
+		installForWindows(args, pvmPath, versionsPath)
+	} else {
+		theme.Error(fmt.Sprintf("Unsupported operating system: %s", runtime.GOOS))
+	}
+}
+
+func setupDirectories() (string, string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", "", err
+	}
+
+	pvmPath := filepath.Join(homeDir, ".pvm")
+	if _, err := os.Stat(pvmPath); os.IsNotExist(err) {
+		theme.Info("Creating .pvm folder in home directory")
+		if err := os.Mkdir(pvmPath, 0755); err != nil {
+			return "", "", err
+		}
+	}
+
+	versionsPath := filepath.Join(pvmPath, "versions")
+	if _, err := os.Stat(versionsPath); os.IsNotExist(err) {
+		theme.Info("Creating .pvm/versions folder")
+		if err := os.Mkdir(versionsPath, 0755); err != nil {
+			return "", "", err
+		}
+	}
+
+	return pvmPath, versionsPath, nil
+}
+
+func installForMac(version string, pvmPath string, versionsPath string) {
+	theme.Info(fmt.Sprintf("Installing PHP %s for macOS using Homebrew...", version))
+
+	// Check if brew is installed
+	if _, err := exec.LookPath("brew"); err != nil {
+		theme.Error("Homebrew is not installed. Please install it to continue.")
+		theme.Info("See: https://brew.sh/")
+		return
+	}
+
+	// Tap shivammathur/php for older versions
+	versionParts := strings.Split(version, ".")
+	if len(versionParts) >= 2 {
+		major := versionParts[0]
+		minor := versionParts[1]
+		// Example logic: tap for versions older than 8.0
+		if major < "8" || (major == "7" && minor <= "4") {
+			theme.Info("Tapping shivammathur/php for older PHP versions...")
+			cmd := exec.Command("brew", "tap", "shivammathur/php")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Run(); err != nil {
+				theme.Error("Failed to tap shivammathur/php.")
+				log.Printf("Error: %v\n", err)
+				return
+			}
+		}
+	}
+
+	phpPackage := fmt.Sprintf("php@%s", version)
+	theme.Info(fmt.Sprintf("Running 'brew install %s'...", phpPackage))
+	cmd := exec.Command("brew", "install", phpPackage)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		theme.Error(fmt.Sprintf("Failed to install PHP %s using Homebrew.", version))
+		log.Printf("Error: %v\n", err)
+		return
+	}
+
+	// Get brew prefix
+	prefixCmd := exec.Command("brew", "--prefix")
+	prefixBytes, err := prefixCmd.Output()
+	if err != nil {
+		theme.Error("Failed to get brew prefix.")
+		log.Printf("Error: %v\n", err)
+		return
+	}
+	brewPrefix := strings.TrimSpace(string(prefixBytes))
+	phpInstallPath := filepath.Join(brewPrefix, "opt", phpPackage)
+
+	// Create symlinks in .pvm/versions
+	versionDir := filepath.Join(versionsPath, version)
+	if err := os.Mkdir(versionDir, 0755); err != nil {
+		theme.Error(fmt.Sprintf("Failed to create directory for PHP %s.", version))
+		log.Printf("Error: %v\n", err)
+		return
+	}
+
+	binPath := filepath.Join(phpInstallPath, "bin")
+	filesToLink := []string{"php", "phpize", "php-config", "pecl"}
+	for _, file := range filesToLink {
+		source := filepath.Join(binPath, file)
+		destination := filepath.Join(versionDir, file)
+		if err := os.Symlink(source, destination); err != nil {
+			// Don't fail if a file doesn't exist (e.g. older versions might not have all of them)
+			theme.Warning(fmt.Sprintf("Could not create symlink for %s: %v", file, err))
+		}
+	}
+
+	theme.Success(fmt.Sprintf("Finished installing PHP %s", version))
+	theme.Info(fmt.Sprintf("Run 'pvm use %s' to start using it.", version))
+}
+
+func installForWindows(args []string, pvmPath string, versionsPath string) {
 	desireThreadSafe := true
 	if len(args) > 2 {
 		if args[2] == "nts" {
@@ -77,26 +202,6 @@ func Install(args []string) {
 	}
 
 	fmt.Printf("Installing PHP %s\n", desiredVersion)
-
-	homeDir, err := os.UserHomeDir()
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// check if .pvm folder exists
-	pvmPath := filepath.Join(homeDir, ".pvm")
-	if _, err := os.Stat(pvmPath); os.IsNotExist(err) {
-		theme.Info("Creating .pvm folder in home directory")
-		os.Mkdir(pvmPath, 0755)
-	}
-
-	// check if .pvm/versions folder exists
-	versionsPath := filepath.Join(pvmPath, "versions")
-	if _, err := os.Stat(versionsPath); os.IsNotExist(err) {
-		theme.Info("Creating .pvm/versions folder in home directory")
-		os.Mkdir(versionsPath, 0755)
-	}
 
 	theme.Info("Downloading")
 

@@ -10,6 +10,7 @@ import (
 )
 
 func ListRemote() {
+	theme.Info("Fetching remote versions...")
 	versions, err := common.RetrievePHPVersions()
 	if err != nil {
 		log.Fatalln(err)
