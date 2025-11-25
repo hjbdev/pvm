@@ -1,4 +1,4 @@
-# PVM for Windows
+# PVM for Windows and Macos
 
 [Support this project](https://github.com/sponsors/hjbdev)
 
@@ -13,9 +13,31 @@ This utility changes that.
 
 ## Installation
 
+### Windows
+
 Download the latest pvm version from the releases page (1.0-alpha-1, it's currently a pre-release).
 
 Create the folder `%UserProfile%\.pvm\bin` (e.g. `C:\Users\Harry\.pvm\bin`) and drop the pvm exe in there. Add the folder to your PATH.
+
+### Macos
+
+> [!NOTE]  
+> Homebrew must be installed before proceeding with the Macos installation.
+
+Install PVM using Go:
+
+```shell
+go install github.com/hjbdev/pvm@latest
+```
+
+This will install the `pvm` binary to your `$GOPATH/bin` directory (typically `$HOME/go/bin`). Make sure this directory is in your PATH.
+
+To add it to your PATH permanently, add this line to your shell profile (`~/.zshrc` or `~/.bash_profile`):
+
+```shell
+export PATH=$PATH:$HOME/go/bin
+```
+
 
 ## Commands
 ```
