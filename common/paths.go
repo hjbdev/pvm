@@ -14,9 +14,16 @@ type PVMPaths struct {
 }
 
 func NewPVMPaths() (PVMPaths, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return PVMPaths{}, err
+	// Allow tests to override the home directory by setting HOME.
+	// On Windows, os.UserHomeDir uses USERPROFILE; prefer HOME if present to
+	// make tests platform-independent.
+	homeDir := os.Getenv("HOME")
+	if homeDir == "" {
+		var err error
+		homeDir, err = os.UserHomeDir()
+		if err != nil {
+			return PVMPaths{}, err
+		}
 	}
 
 	root := filepath.Join(homeDir, ".pvm")

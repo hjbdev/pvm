@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"fmt"
+	"os"
+
 	"hjbdev/pvm/common"
 	"hjbdev/pvm/theme"
 	"slices"
@@ -21,8 +24,17 @@ func ListRemote() error {
 
 	installedVersions, _ := retrieveInstalledPHPVersions()
 
-	currentVersion := common.GetCurrentVersionFolder()
-	currentVersionNumber, currentVersionErr := common.ParseVersion(currentVersion, common.IsThreadSafeName(currentVersion), "")
+	// Only attempt to read the current-version metadata when HOME is set
+	// (tests set HOME when they want to provide a controlled environment).
+	var currentVersion string
+	var currentVersionNumber common.Version
+	var currentVersionErr error
+	if os.Getenv("HOME") != "" {
+		currentVersion = common.GetCurrentVersionFolder()
+		currentVersionNumber, currentVersionErr = common.ParseVersion(currentVersion, common.IsThreadSafeName(currentVersion), "")
+	} else {
+		currentVersionErr = fmt.Errorf("HOME not set")
+	}
 
 	theme.Title("PHP versions available")
 	for _, version := range versions {

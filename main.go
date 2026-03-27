@@ -34,6 +34,8 @@ func main() {
 	switch args[0] {
 	case "help":
 		commands.Help(false)
+	case "update":
+		err = commands.Update(args[1:])
 	case "ls", "list":
 		err = commands.List(args[1:])
 	case "bin":
