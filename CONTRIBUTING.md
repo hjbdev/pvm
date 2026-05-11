@@ -1,0 +1,2 @@
+- Be respectful
+- I don't mind AI assisted submissions, but the description of your PR should be written by a human or be easily digestible. Slop will be closed.
