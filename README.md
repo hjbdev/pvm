@@ -65,6 +65,25 @@ pvm extensions disable xdebug
 ```
 Will disable an extension or Zend extension in the active version's `php.ini`.
 
+```
+pvm update [--yes-update|-y]
+```
+Check for a newer `pvm` release. When a newer release is found, `pvm update` will run the installer automatically (no interactive prompt).
+
+- `--yes-update`, `-y`: when provided, `pvm update` prefers the safe download-and-replace installer path (the default non-interactive flow used in CI/testing).
+
+The installer executed by the quick-install command is:
+
+```powershell
+irm https://pvm.hjb.dev/install.ps1 | iex
+```
+
+Notes:
+
+- `PVM_INSTALL_SCRIPT`: optional environment variable pointing to a custom installer. Can be a URL (http/https) or a local PowerShell script path. When set, `pvm update` will run this installer instead of the default download flow.
+- `PVM_INSTALL_CHECKSUM`: optional SHA256 hex string used to verify the downloaded `pvm.exe` when using the automatic download path.
+- Safe update behavior: by default `pvm update` will download the `pvm.exe` release asset, optionally verify its checksum, back up the existing `pvm.exe` to `pvm.exe.bak`, atomically replace the binary and verify the installed version. On verification failure it will attempt to roll back to the backup.
+
 ## Composer support
 `pvm` now installs also composer with each php version installed.
 It will install Composer latest stable release for PHP >= 7.2 and Composer latest 2.2.x LTS for PHP < 7.2.
